@@ -274,12 +274,14 @@ export default function App() {
                       onClick={() => setUserData({ ...userData, branch: branch.name })}
                       className={`p-4 rounded-lg border-2 transition ${
                         userData.branch === branch.name
-                          ? 'border-blue-600 bg-blue-50 text-blue-700'
+                          ? 'border-blue-600 bg-blue-600 text-white'
                           : 'border-gray-200 hover:border-blue-300'
                       }`}
                     >
                       <div className="font-semibold text-sm">{branch.name.split(',')[0]}</div>
-                      <div className="text-xs text-gray-600">{branch.subtitle}</div>
+                      <div className={`text-xs ${
+                        userData.branch === branch.name ? 'text-white' : 'text-gray-600'
+                      }`}>{branch.subtitle}</div>
                     </button>
                   ))}
                 </div>
