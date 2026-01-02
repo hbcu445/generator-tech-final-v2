@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { jsPDF } from 'jspdf';
 import questions from './questions.json';
+import { generateExplanation } from './explanations';
 
 export default function App() {
   const [stage, setStage] = useState('landing'); // landing, test, results
@@ -16,6 +17,9 @@ export default function App() {
   const [timeLeft, setTimeLeft] = useState(75 * 60); // 75 minutes in seconds
   const [isPaused, setIsPaused] = useState(false);
   const [testStartTime, setTestStartTime] = useState(null);
+  const [pauseCount, setPauseCount] = useState(0);
+  const [timeTaken, setTimeTaken] = useState(0);
+  const [showReport, setShowReport] = useState(false);
   const timerRef = useRef(null);
 
   // Timer effect
@@ -139,6 +143,10 @@ export default function App() {
   };
 
   const handleSubmitTest = async () => {
+    // Calculate time taken
+    const timeSpent = (75 * 60) - timeLeft;
+    setTimeTaken(timeSpent);
+    
     const results = calculateResults();
     setStage('results');
 
@@ -173,6 +181,140 @@ export default function App() {
     const results = calculateResults();
     const certificate = generateCertificate(results);
     certificate.save(`${userData.name}_Certificate.pdf`);
+  };
+
+  const getIncorrectAnswers = () => {
+    const incorrect = [];
+    questions.forEach((q, index) => {
+      if (answers[index] !== q.correct_answer_letter) {
+        const userAnswerLetter = answers[index] || 'No answer';
+        const userAnswerText = userAnswerLetter !== 'No answer' 
+          ? q.options.find(opt => opt.startsWith(userAnswerLetter))?.substring(3) || 'No answer'
+          : 'No answer';
+        const correctAnswerText = q.options.find(opt => opt.startsWith(q.correct_answer_letter))?.substring(3) || '';
+        
+        incorrect.push({
+          questionNumber: index + 1,
+          question: q.question,
+          userAnswer: `${userAnswerLetter}) ${userAnswerText}`,
+          correctAnswer: `${q.correct_answer_letter}) ${correctAnswerText}`,
+          explanation: generateExplanation(q.question, correctAnswerText)
+        });
+      }
+    });
+    return incorrect;
+  };
+
+  const downloadReport = () => {
+    const doc = new jsPDF();
+    const incorrectAnswers = getIncorrectAnswers();
+    const results = calculateResults();
+    
+    // Header
+    doc.setFillColor(41, 128, 185);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.text('Detailed Test Report', 105, 20, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text('Generator Technician Knowledge Test', 105, 30, { align: 'center' });
+    
+    // Test Information
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    let yPos = 50;
+    doc.text(`Name: ${userData.name}`, 20, yPos);
+    doc.text(`Email: ${userData.email}`, 20, yPos + 6);
+    doc.text(`Branch: ${userData.branch}`, 20, yPos + 12);
+    doc.text(`Skill Level: ${userData.skillLevel}`, 20, yPos + 18);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, yPos + 24);
+    doc.text(`Time Taken: ${formatTime(timeTaken)}`, 20, yPos + 30);
+    doc.text(`Pauses: ${pauseCount}`, 20, yPos + 36);
+    
+    // Score Summary
+    yPos += 50;
+    doc.setFontSize(14);
+    doc.setTextColor(41, 128, 185);
+    doc.text('Score Summary', 20, yPos);
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    yPos += 8;
+    doc.text(`Total Questions: ${results.total}`, 20, yPos);
+    doc.text(`Correct Answers: ${results.correct}`, 20, yPos + 6);
+    doc.text(`Incorrect Answers: ${results.total - results.correct}`, 20, yPos + 12);
+    doc.text(`Score: ${results.percentage}%`, 20, yPos + 18);
+    doc.text(`Status: ${results.passed ? 'PASSED' : 'NOT PASSED'}`, 20, yPos + 24);
+    
+    // Incorrect Answers Details
+    if (incorrectAnswers.length > 0) {
+      yPos += 35;
+      doc.setFontSize(14);
+      doc.setTextColor(220, 38, 38);
+      doc.text('Incorrect Answers Review', 20, yPos);
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      
+      incorrectAnswers.forEach((item, index) => {
+        yPos += 10;
+        
+        // Check if we need a new page
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        // Question
+        doc.setFont(undefined, 'bold');
+        const questionLines = doc.splitTextToSize(`Q${item.questionNumber}: ${item.question}`, 170);
+        doc.text(questionLines, 20, yPos);
+        yPos += questionLines.length * 5;
+        
+        // Your Answer
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(220, 38, 38);
+        doc.text('Your Answer:', 20, yPos);
+        doc.setTextColor(0, 0, 0);
+        const userAnswerLines = doc.splitTextToSize(item.userAnswer, 150);
+        doc.text(userAnswerLines, 50, yPos);
+        yPos += Math.max(5, userAnswerLines.length * 5);
+        
+        // Correct Answer
+        doc.setTextColor(34, 197, 94);
+        doc.text('Correct Answer:', 20, yPos);
+        doc.setTextColor(0, 0, 0);
+        const correctAnswerLines = doc.splitTextToSize(item.correctAnswer, 150);
+        doc.text(correctAnswerLines, 50, yPos);
+        yPos += Math.max(5, correctAnswerLines.length * 5);
+        
+        // Explanation
+        doc.setTextColor(37, 99, 235);
+        doc.text('Explanation:', 20, yPos);
+        doc.setTextColor(0, 0, 0);
+        const explanationLines = doc.splitTextToSize(item.explanation, 170);
+        doc.text(explanationLines, 20, yPos + 5);
+        yPos += explanationLines.length * 5 + 8;
+        
+        // Separator line
+        doc.setDrawColor(200, 200, 200);
+        doc.line(20, yPos, 190, yPos);
+      });
+    } else {
+      yPos += 35;
+      doc.setFontSize(12);
+      doc.setTextColor(34, 197, 94);
+      doc.text('🎉 Perfect Score! All answers were correct.', 20, yPos);
+    }
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(128, 128, 128);
+      doc.text(`Generator Source - Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
+    }
+    
+    doc.save(`${userData.name}_Detailed_Report.pdf`);
   };
 
   // Landing Page
@@ -364,7 +506,10 @@ export default function App() {
                     {formatTime(timeLeft)}
                   </div>
                   <button
-                    onClick={() => setIsPaused(!isPaused)}
+                    onClick={() => {
+                      if (!isPaused) setPauseCount(prev => prev + 1);
+                      setIsPaused(!isPaused);
+                    }}
                     className={`px-4 py-2 rounded-lg font-semibold transition ${
                       isPaused
                         ? 'bg-green-500 hover:bg-green-600 text-white'
@@ -536,11 +681,19 @@ export default function App() {
                   <span className="text-gray-600">Date:</span>
                   <span className="font-semibold ml-2">{new Date().toLocaleDateString()}</span>
                 </div>
+                <div>
+                  <span className="text-gray-600">Time Taken:</span>
+                  <span className="font-semibold ml-2">{formatTime(timeTaken)}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Pauses:</span>
+                  <span className="font-semibold ml-2">{pauseCount}</span>
+                </div>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 mb-4">
               <button
                 onClick={downloadCertificate}
                 className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 rounded-lg font-bold hover:from-blue-600 hover:to-blue-700 transition shadow-lg"
@@ -554,6 +707,59 @@ export default function App() {
                 Take Test Again
               </button>
             </div>
+
+            {/* Report Actions */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={() => setShowReport(!showReport)}
+                className="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white py-4 rounded-lg font-bold hover:from-purple-600 hover:to-purple-700 transition shadow-lg"
+              >
+                {showReport ? '📋 Hide Report' : '📋 View Detailed Report'}
+              </button>
+              <button
+                onClick={downloadReport}
+                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg font-bold hover:from-green-600 hover:to-green-700 transition shadow-lg"
+              >
+                ⬇️ Download Report PDF
+              </button>
+            </div>
+
+            {/* Detailed Report Section */}
+            {showReport && (
+              <div className="mt-8 border-t-2 border-gray-200 pt-8">
+                <h3 className="text-2xl font-bold text-gray-800 mb-6">Detailed Answer Report</h3>
+                {getIncorrectAnswers().length === 0 ? (
+                  <div className="bg-green-50 p-6 rounded-xl text-center">
+                    <div className="text-green-600 text-xl font-bold mb-2">🎉 Perfect Score!</div>
+                    <p className="text-gray-600">You answered all questions correctly. Excellent work!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {getIncorrectAnswers().map((item, index) => (
+                      <div key={index} className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
+                        <div className="font-bold text-gray-800 mb-3">
+                          Question {item.questionNumber}: {item.question}
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-start">
+                            <span className="text-red-600 font-semibold mr-2">Your Answer:</span>
+                            <span className="text-gray-700">{item.userAnswer}</span>
+                          </div>
+                          <div className="flex items-start">
+                            <span className="text-green-600 font-semibold mr-2">Correct Answer:</span>
+                            <span className="text-gray-700">{item.correctAnswer}</span>
+                          </div>
+                          <div className="bg-white p-4 rounded-lg mt-3">
+                            <span className="text-blue-600 font-semibold">Explanation:</span>
+                            <p className="text-gray-700 mt-2">{item.explanation}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Email Notice */}
             <div className="mt-6 text-center text-sm text-gray-600">
