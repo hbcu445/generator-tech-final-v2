@@ -183,8 +183,8 @@ export default function App() {
           {/* Header with logo and title in one line */}
           <div className="flex items-center gap-4 mb-12">
             <img src="/generator-source-logo.jpg" alt="Generator Source" className="h-12" />
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-800">
-              Generator Technician Knowledge Test
+            <h1 className="text-2xl md:text-3xl font-bold text-blue-600 whitespace-nowrap">
+              Technician Knowledge Test
             </h1>
           </div>
 
