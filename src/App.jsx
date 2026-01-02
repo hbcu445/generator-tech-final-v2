@@ -180,11 +180,12 @@ export default function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
         <div className="container mx-auto px-4 py-12 max-w-4xl">
-          {/* Header */}
+          {/* Header with logo */}
+          <div className="flex items-start mb-8">
+            <img src="/generator-source-logo.jpg" alt="Generator Source" className="h-10" />
+          </div>
+          
           <div className="text-center mb-12">
-            <div className="inline-block bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-semibold mb-4">
-              Generator Source
-            </div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
               Generator Technician Knowledge Test
             </h1>
@@ -323,6 +324,12 @@ export default function App() {
                 CLICK HERE TO START
               </button>
             </div>
+          </div>
+          
+          {/* DaVinci Footer - bottom right */}
+          <div className="fixed bottom-4 right-4 flex items-center gap-2 bg-white/80 backdrop-blur-sm px-3 py-2 rounded-lg shadow-sm">
+            <img src="/davinci-logo.png" alt="DaVinci.AI" className="h-8" />
+            <span className="text-xs text-gray-500">© 2026</span>
           </div>
         </div>
       </div>
