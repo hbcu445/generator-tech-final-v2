@@ -180,13 +180,10 @@ export default function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
         <div className="container mx-auto px-4 py-12 max-w-4xl">
-          {/* Header with logo */}
-          <div className="flex items-start mb-8">
-            <img src="/generator-source-logo.jpg" alt="Generator Source" className="h-10" />
-          </div>
-          
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+          {/* Header with logo and title in one line */}
+          <div className="flex items-center gap-4 mb-12">
+            <img src="/generator-source-logo.jpg" alt="Generator Source" className="h-12" />
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-800">
               Generator Technician Knowledge Test
             </h1>
           </div>
