@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { jsPDF } from 'jspdf';
 import questions from './questions.json';
-import { generateExplanation } from './explanations';
+import { getExplanationByNumber } from './questionExplanations';
 
 export default function App() {
   const [stage, setStage] = useState('landing'); // landing, test, results
@@ -263,7 +263,7 @@ export default function App() {
           question: q.question,
           userAnswer: `${userAnswerLetter}) ${userAnswerText}`,
           correctAnswer: `${q.correct_answer_letter}) ${correctAnswerText}`,
-          explanation: generateExplanation(q.question, correctAnswerText)
+          explanation: getExplanationByNumber(index + 1)
         });
       }
     });
