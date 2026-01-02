@@ -275,9 +275,19 @@ export default function App() {
     const incorrectAnswers = getIncorrectAnswers();
     const results = calculateResults();
     
-    // Header
-    doc.setFillColor(41, 128, 185);
+    // Header with dark blue background (matching Generator Source logo)
+    doc.setFillColor(30, 58, 95); // Dark navy blue
     doc.rect(0, 0, 210, 40, 'F');
+    
+    // Logo on left side
+    const logoPath = '/generator-source-logo.jpg';
+    try {
+      doc.addImage(logoPath, 'JPEG', 15, 10, 35, 11);
+    } catch (e) {
+      console.log('Logo not embedded in PDF');
+    }
+    
+    // Title text on right side
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
     doc.text('Detailed Test Report', 105, 20, { align: 'center' });
@@ -299,7 +309,7 @@ export default function App() {
     // Score Summary
     yPos += 50;
     doc.setFontSize(14);
-    doc.setTextColor(41, 128, 185);
+    doc.setTextColor(30, 58, 95); // Dark navy blue
     doc.text('Score Summary', 20, yPos);
     doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
