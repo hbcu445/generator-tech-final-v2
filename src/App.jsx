@@ -837,7 +837,9 @@ export default function App() {
 
             {/* Email Notice */}
             <div className="mt-6 text-center text-sm text-gray-600">
-              Your results and certificate have been sent to <strong>{userData.email}</strong>
+              Your results and certificate have been sent to <strong>{userData.email}</strong> on{' '}
+              <strong>{new Date().toLocaleDateString()}</strong> at{' '}
+              <strong>{new Date().toLocaleTimeString()}</strong>
             </div>
           </div>
         </div>
