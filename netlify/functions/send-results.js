@@ -1,5 +1,3 @@
-const sgMail = require('@sendgrid/mail');
-
 exports.handler = async (event) => {
   // Only allow POST
   if (event.httpMethod !== 'POST') {
@@ -13,9 +11,6 @@ exports.handler = async (event) => {
     // Parse form data
     const body = JSON.parse(event.body);
     const { name, email, phone, branch, skillLevel, score, total, percentage, passed } = body;
-
-    // Initialize SendGrid
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
     // Email content
     const emailHtml = `
@@ -79,27 +74,67 @@ exports.handler = async (event) => {
       </div>
     `;
 
-    // Send email to applicant
-    await sgMail.send({
-      to: email,
-      from: {
-        email: process.env.SENDGRID_FROM_EMAIL,
-        name: process.env.SENDGRID_FROM_NAME
-      },
-      subject: `Generator Technician Test Results - ${passed ? 'PASSED' : 'NOT PASSED'}`,
-      html: emailHtml
-    });
+    // SendGrid API endpoint
+    const SENDGRID_API = 'https://api.sendgrid.com/v3/mail/send';
 
-    // Send notification to company
-    await sgMail.send({
-      to: process.env.SENDGRID_FROM_EMAIL,
+    // Email to applicant
+    const applicantEmail = {
+      personalizations: [{
+        to: [{ email: email }],
+        subject: `Generator Technician Test Results - ${passed ? 'PASSED' : 'NOT PASSED'}`
+      }],
       from: {
         email: process.env.SENDGRID_FROM_EMAIL,
         name: process.env.SENDGRID_FROM_NAME
       },
-      subject: `New Test Submission: ${name} - ${passed ? 'PASSED' : 'NOT PASSED'}`,
-      html: emailHtml
-    });
+      content: [{
+        type: 'text/html',
+        value: emailHtml
+      }]
+    };
+
+    // Email to company
+    const companyEmail = {
+      personalizations: [{
+        to: [{ email: process.env.SENDGRID_FROM_EMAIL }],
+        subject: `New Test Submission: ${name} - ${passed ? 'PASSED' : 'NOT PASSED'}`
+      }],
+      from: {
+        email: process.env.SENDGRID_FROM_EMAIL,
+        name: process.env.SENDGRID_FROM_NAME
+      },
+      content: [{
+        type: 'text/html',
+        value: emailHtml
+      }]
+    };
+
+    // Send both emails using fetch
+    const responses = await Promise.all([
+      fetch(SENDGRID_API, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(applicantEmail)
+      }),
+      fetch(SENDGRID_API, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(companyEmail)
+      })
+    ]);
+
+    // Check if both emails sent successfully
+    const allSuccess = responses.every(r => r.ok);
+
+    if (!allSuccess) {
+      throw new Error('One or more emails failed to send');
+    }
 
     return {
       statusCode: 200,
