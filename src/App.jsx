@@ -14,7 +14,7 @@ export default function App() {
   });
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [timeLeft, setTimeLeft] = useState(75 * 60); // 75 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(90 * 60); // 90 minutes in seconds
   const [isPaused, setIsPaused] = useState(false);
   const [testStartTime, setTestStartTime] = useState(null);
   const [pauseCount, setPauseCount] = useState(0);
@@ -88,63 +88,128 @@ export default function App() {
       format: 'a4'
     });
 
-    // Background
-    doc.setFillColor(240, 248, 255);
+    // White background
+    doc.setFillColor(255, 255, 255);
     doc.rect(0, 0, 297, 210, 'F');
 
-    // Border
-    doc.setDrawColor(41, 128, 185);
-    doc.setLineWidth(2);
+    // Double border - outer
+    doc.setDrawColor(30, 58, 95); // Dark navy
+    doc.setLineWidth(0.8);
     doc.rect(10, 10, 277, 190);
+    
+    // Double border - inner
+    doc.setLineWidth(0.3);
+    doc.rect(15, 15, 267, 180);
 
-    // Title
-    doc.setFontSize(32);
-    doc.setTextColor(41, 128, 185);
-    doc.text('CERTIFICATE OF COMPLETION', 148.5, 40, { align: 'center' });
-
-    // Subtitle
-    doc.setFontSize(18);
-    doc.setTextColor(52, 73, 94);
-    doc.text('Generator Technician Knowledge Test', 148.5, 55, { align: 'center' });
-
-    // Presented to
-    doc.setFontSize(14);
-    doc.text('This certificate is presented to', 148.5, 75, { align: 'center' });
-
-    // Name
-    doc.setFontSize(28);
-    doc.setTextColor(41, 128, 185);
-    doc.text(userData.name, 148.5, 95, { align: 'center' });
-
-    // Details
-    doc.setFontSize(12);
-    doc.setTextColor(52, 73, 94);
-    doc.text(`Score: ${results.correct} out of ${results.total} (${results.percentage}%)`, 148.5, 115, { align: 'center' });
-    doc.text(`Branch: ${userData.branch}`, 148.5, 125, { align: 'center' });
-    doc.text(`Skill Level: ${userData.skillLevel}`, 148.5, 135, { align: 'center' });
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 148.5, 145, { align: 'center' });
-
-    // Status
-    doc.setFontSize(16);
-    if (results.passed) {
-      doc.setTextColor(39, 174, 96);
-      doc.text('✓ PASSED', 148.5, 165, { align: 'center' });
-    } else {
-      doc.setTextColor(231, 76, 60);
-      doc.text('✗ NOT PASSED', 148.5, 165, { align: 'center' });
+    // Logo (using base64 or image URL)
+    const logoPath = '/generator-source-logo.jpg';
+    try {
+      doc.addImage(logoPath, 'JPEG', 125, 25, 47, 15);
+    } catch (e) {
+      console.log('Logo not embedded in PDF');
     }
 
-    // Footer
+    // Title
+    doc.setFontSize(36);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 58, 95);
+    doc.text('CERTIFICATE OF COMPLETION', 148.5, 60, { align: 'center' });
+
+    // Presentation line
+    doc.setFontSize(14);
+    doc.setFont('times', 'normal');
+    doc.setTextColor(51, 51, 51);
+    doc.text('This certificate is proudly presented to:', 148.5, 75, { align: 'center' });
+
+    // Name with underline
+    doc.setFontSize(28);
+    doc.setFont('times', 'bolditalic');
+    doc.setTextColor(30, 58, 95);
+    doc.text(userData.name, 148.5, 88, { align: 'center' });
+    doc.setLineWidth(0.5);
+    doc.line(90, 90, 207, 90);
+
+    // Achievement description
+    doc.setFontSize(12);
+    doc.setFont('times', 'normal');
+    doc.setTextColor(51, 51, 51);
+    doc.text('For successfully completing the', 148.5, 100, { align: 'center' });
+    doc.setFont('times', 'bold');
+    doc.setTextColor(30, 58, 95);
+    doc.text('Generator Technician Knowledge Assessment', 148.5, 107, { align: 'center' });
+
+    // Details section
+    doc.setFont('times', 'normal');
+    doc.setTextColor(51, 51, 51);
+    doc.setFontSize(11);
+    
+    const leftX = 70;
+    const rightX = 165;
+    let yPos = 122;
+    
+    // Score
+    doc.setFont('times', 'bold');
+    doc.text('With a score of:', leftX, yPos);
+    doc.setFont('times', 'normal');
+    doc.setTextColor(30, 58, 95);
+    doc.text(`${results.percentage}%`, rightX, yPos);
+    doc.line(rightX, yPos + 1, rightX + 40, yPos + 1);
+    
+    // Achievement Level
+    yPos += 10;
+    doc.setTextColor(51, 51, 51);
+    doc.setFont('times', 'bold');
+    doc.text('Achievement Level:', leftX, yPos);
+    doc.setFont('times', 'normal');
+    doc.setTextColor(30, 58, 95);
+    doc.text(userData.skillLevel, rightX, yPos);
+    doc.line(rightX, yPos + 1, rightX + 40, yPos + 1);
+    
+    // Date
+    yPos += 10;
+    doc.setTextColor(51, 51, 51);
+    doc.setFont('times', 'bold');
+    doc.text('Date Completed:', leftX, yPos);
+    doc.setFont('times', 'normal');
+    doc.setTextColor(30, 58, 95);
+    doc.text(new Date().toLocaleDateString(), rightX, yPos);
+    doc.line(rightX, yPos + 1, rightX + 40, yPos + 1);
+    
+    // Time
+    yPos += 10;
+    doc.setTextColor(51, 51, 51);
+    doc.setFont('times', 'bold');
+    doc.text('Time to Completion:', leftX, yPos);
+    doc.setFont('times', 'normal');
+    doc.setTextColor(30, 58, 95);
+    doc.text(`${formatTime(timeTaken)} out of 90 minutes`, rightX, yPos);
+    doc.line(rightX, yPos + 1, rightX + 40, yPos + 1);
+
+    // Signature section
+    yPos = 170;
+    doc.setTextColor(51, 51, 51);
     doc.setFontSize(10);
-    doc.setTextColor(127, 140, 141);
-    doc.text('Generator Source', 148.5, 185, { align: 'center' });
+    doc.text('Authorized By:', 50, yPos);
+    doc.line(50, yPos + 10, 110, yPos + 10);
+    
+    doc.text('Date:', 187, yPos);
+    doc.line(187, yPos + 10, 247, yPos + 10);
+
+    // Footer
+    doc.setFontSize(9);
+    doc.setFont('times', 'italic');
+    doc.setTextColor(102, 102, 102);
+    doc.text('Generator Source • Sales • Rentals • Service', 25, 195);
+    doc.setFont('times', 'bolditalic');
+    doc.setTextColor(30, 58, 95);
+    doc.text('Official Technician Certification', 25, 200);
 
     return doc;
   };
 
   const handleSubmitTest = async () => {
     // Calculate time taken
-    const timeSpent = (75 * 60) - timeLeft;
+    const timeSpent = (90 * 60) - timeLeft;
     setTimeTaken(timeSpent);
     
     const results = calculateResults();
@@ -341,7 +406,7 @@ export default function App() {
             <ul className="space-y-2 text-gray-600">
               <li className="flex items-start">
                 <span className="text-blue-600 mr-2">✓</span>
-                You have <strong>75 minutes</strong> to complete <strong>100 questions</strong>
+                You have <strong>90 minutes</strong> to complete <strong>100 questions</strong>
               </li>
               <li className="flex items-start">
                 <span className="text-blue-600 mr-2">✓</span>
@@ -696,9 +761,14 @@ export default function App() {
             <div className="flex flex-col sm:flex-row gap-4 mb-4">
               <button
                 onClick={downloadCertificate}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 rounded-lg font-bold hover:from-blue-600 hover:to-blue-700 transition shadow-lg"
+                disabled={!results.passed}
+                className={`flex-1 py-4 rounded-lg font-bold transition shadow-lg ${
+                  results.passed
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 cursor-pointer'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
               >
-                📄 Download Certificate
+                📄 Download Certificate {!results.passed && '(Pass Required)'}
               </button>
               <button
                 onClick={() => window.location.reload()}
@@ -709,57 +779,51 @@ export default function App() {
             </div>
 
             {/* Report Actions */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={() => setShowReport(!showReport)}
-                className="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white py-4 rounded-lg font-bold hover:from-purple-600 hover:to-purple-700 transition shadow-lg"
-              >
-                {showReport ? '📋 Hide Report' : '📋 View Detailed Report'}
-              </button>
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <button
                 onClick={downloadReport}
                 className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg font-bold hover:from-green-600 hover:to-green-700 transition shadow-lg"
               >
-                ⬇️ Download Report PDF
+                ⬇️ Download Detailed Report PDF
               </button>
             </div>
 
-            {/* Detailed Report Section */}
-            {showReport && (
-              <div className="mt-8 border-t-2 border-gray-200 pt-8">
-                <h3 className="text-2xl font-bold text-gray-800 mb-6">Detailed Answer Report</h3>
-                {getIncorrectAnswers().length === 0 ? (
-                  <div className="bg-green-50 p-6 rounded-xl text-center">
-                    <div className="text-green-600 text-xl font-bold mb-2">🎉 Perfect Score!</div>
-                    <p className="text-gray-600">You answered all questions correctly. Excellent work!</p>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {getIncorrectAnswers().map((item, index) => (
-                      <div key={index} className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
-                        <div className="font-bold text-gray-800 mb-3">
-                          Question {item.questionNumber}: {item.question}
+            {/* Detailed Report Section - Always Visible */}
+            <div className="mt-8 border-t-2 border-gray-200 pt-8">
+              <h3 className="text-2xl font-bold text-gray-800 mb-6">Detailed Answer Report</h3>
+              {getIncorrectAnswers().length === 0 ? (
+                <div className="bg-green-50 p-6 rounded-xl text-center">
+                  <div className="text-green-600 text-xl font-bold mb-2">🎉 Perfect Score!</div>
+                  <p className="text-gray-600">You answered all questions correctly. Excellent work!</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {getIncorrectAnswers().map((item, index) => (
+                    <div key={index} className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
+                      <div className="font-bold text-gray-800 mb-3">
+                        Question {item.questionNumber}: {item.question}
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-start">
+                          <span className="text-red-600 font-semibold mr-2">Your Answer:</span>
+                          <span className="text-gray-700">{item.userAnswer}</span>
                         </div>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-start">
-                            <span className="text-red-600 font-semibold mr-2">Your Answer:</span>
-                            <span className="text-gray-700">{item.userAnswer}</span>
-                          </div>
-                          <div className="flex items-start">
-                            <span className="text-green-600 font-semibold mr-2">Correct Answer:</span>
-                            <span className="text-gray-700">{item.correctAnswer}</span>
-                          </div>
-                          <div className="bg-white p-4 rounded-lg mt-3">
-                            <span className="text-blue-600 font-semibold">Explanation:</span>
-                            <p className="text-gray-700 mt-2">{item.explanation}</p>
-                          </div>
+                        <div className="flex items-start">
+                          <span className="text-green-600 font-semibold mr-2">Correct Answer:</span>
+                          <span className="text-gray-700">{item.correctAnswer}</span>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg mt-3">
+                          <span className="text-blue-600 font-semibold">Explanation:</span>
+                          <p className="text-gray-700 mt-2">{item.explanation}</p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+
 
             {/* Email Notice */}
             <div className="mt-6 text-center text-sm text-gray-600">
