@@ -392,8 +392,15 @@ export default function App() {
           <div className="bg-white rounded-2xl shadow-xl p-8">
             {/* Question Header */}
             <div className="mb-6">
-              <div className="text-sm font-semibold text-blue-600 mb-2">
-                QUESTION {currentQuestion + 1} of {questions.length} | COMPLETE: {Math.round(progress)}%
+              <div className="text-sm font-semibold text-blue-600 mb-4">
+                QUESTION {currentQuestion + 1} of {questions.length}
+              </div>
+              {/* Progress Bar */}
+              <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+                <div
+                  className="bg-blue-600 h-full rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
               <h2 className="text-2xl font-bold text-gray-800">
                 {question.question}
@@ -408,8 +415,11 @@ export default function App() {
                 return (
                   <button
                     key={index}
-                    onClick={() => handleAnswerSelect(letter)}
+                    onClick={() => !isPaused && handleAnswerSelect(letter)}
+                    disabled={isPaused}
                     className={`w-full text-left p-4 rounded-lg border-2 transition ${
+                      isPaused ? 'opacity-50 cursor-not-allowed' : ''
+                    } ${
                       isSelected
                         ? 'border-blue-600 bg-blue-50'
                         : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
