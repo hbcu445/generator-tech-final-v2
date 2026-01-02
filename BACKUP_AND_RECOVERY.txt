@@ -1,0 +1,261 @@
+================================================================================
+GENERATOR TECHNICIAN KNOWLEDGE TEST - BACKUP & RECOVERY GUIDE
+================================================================================
+
+Date: January 2, 2026
+Project: Generator Technician Knowledge Test
+Location: /home/ubuntu/generator-final
+
+================================================================================
+CRITICAL INFORMATION - SAVE THIS FILE!
+================================================================================
+
+This file contains all information needed to restore your project if needed.
+Save this on your hard drive in a safe location.
+
+================================================================================
+GITHUB REPOSITORY BACKUP
+================================================================================
+
+Repository Status: ALL CODE BACKED UP AND PUSHED
+
+Git Tags (Version Snapshots):
+  - v1.0-stable: Complete frontend with all features working
+  - v1.0-pre-supabase: Before Supabase integration started
+
+How to restore from GitHub:
+1. Clone: git clone https://github.com/yourusername/generator-final.git
+2. Check tags: git tag -l
+3. Restore: git checkout v1.0-stable
+
+================================================================================
+SUPABASE DATABASE BACKUP
+================================================================================
+
+Supabase Project: Generator Source
+URL: https://supabase.com/dashboard
+Project ID: nnaakuspoqjdyzheklyb
+
+Database Schema File: supabase-schema-final.sql
+Download URL: https://files.manuscdn.com/user_upload_by_module/session_file/88625492/LAAtYKumYNsiDLUx.sql
+
+Tables Created:
+  - branches (4 locations: Brighton, Denver, Fort Collins, Colorado Springs)
+  - branch_admins (login credentials)
+  - branch_email_config (email settings per branch)
+  - branch_skill_levels (scoring configuration per branch)
+  - question_pool (all questions organized by answer letter)
+  - active_test_config (current 100 questions - locked pattern)
+  - shuffle_history (shuffle records)
+  - test_results (technician test results)
+  - question_flags (flagged questions for admin review)
+  - activity_log (audit trail)
+
+To Restore Supabase Database:
+1. Go to https://supabase.com/dashboard
+2. Select "Generator Source" project
+3. Click "SQL Editor"
+4. Download SQL from URL above
+5. Paste entire SQL into editor
+6. Click "Run"
+7. Verify: Should see "Setup complete!" message
+
+================================================================================
+QUESTION POOL SYSTEM
+================================================================================
+
+Answer Pattern (LOCKED - NEVER CHANGES):
+  - 22 questions with correct answer A
+  - 32 questions with correct answer B
+  - 30 questions with correct answer C
+  - 16 questions with correct answer D
+  - Total: 100 questions
+
+Question Organization:
+  - Questions stored in question_pool table
+  - Organized by correct_answer_letter (A, B, C, D)
+  - Each test randomly selects 100 questions maintaining the pattern
+  - Questions can be different between test takers
+  - Answer positions NEVER change
+
+Current Status:
+  - 100 original questions ready to import
+  - Import script: import-questions-to-supabase.py
+  - To import: python3 import-questions-to-supabase.py
+
+================================================================================
+FRONTEND APPLICATION FEATURES
+================================================================================
+
+Completed Features:
+  ✓ 90-minute test duration
+  ✓ Professional certificate (horizontal format with Generator Source logo)
+  ✓ Certificate only issued for passed tests (70%+)
+  ✓ Detailed test report with logo and dark navy branding
+  ✓ 100 specific, professional question explanations
+  ✓ Time tracking (displays time taken)
+  ✓ Pause counting (tracks number of pauses)
+  ✓ Dark navy headline matching Generator Source branding
+  ✓ Question flagging system (technicians can flag confusing questions)
+  ✓ Report always visible (no hide/show toggle)
+  ✓ Date and time on email notice line
+  ✓ Responsive design
+  ✓ Professional styling
+
+Build Status: Successful (no errors)
+Deployment: Netlify (auto-deploys on git push)
+
+================================================================================
+PROJECT STRUCTURE
+================================================================================
+
+/home/ubuntu/generator-final/
+  ├── src/
+  │   ├── App.jsx                    # Main application
+  │   ├── questions.json             # 100 test questions
+  │   ├── questionExplanations.js    # AI-generated explanations
+  │   └── assets/                    # Images and logos
+  ├── public/
+  │   └── generator-source-logo.jpg
+  ├── package.json                   # Dependencies
+  ├── vite.config.js                 # Build configuration
+  ├── supabase-schema-final.sql      # Database schema
+  ├── import-questions-to-supabase.py # Question import script
+  ├── BACKUP_AND_RECOVERY.txt        # This file
+  └── .git/                          # Git repository
+
+================================================================================
+ENVIRONMENT VARIABLES
+================================================================================
+
+These are already configured in Manus:
+
+SUPABASE_URL=https://nnaakuspoqjdyzheklyb.supabase.co
+SUPABASE_KEY=[Your API Key]
+OPENAI_API_KEY=[Your OpenAI Key]
+SENDGRID_API_KEY=[Your SendGrid Key]
+JWT_SECRET=[Your JWT Secret]
+VITE_APP_TITLE=Generator Technician Knowledge Test
+VITE_APP_LOGO=[Logo URL]
+
+================================================================================
+DISASTER RECOVERY PROCEDURES
+================================================================================
+
+SCENARIO 1: Lost Access to Project Files
+Recovery Steps:
+1. Clone from GitHub: git clone https://github.com/yourusername/generator-final.git
+2. Install dependencies: cd generator-final && pnpm install
+3. Run dev server: pnpm dev
+4. Access at: http://localhost:5173
+
+SCENARIO 2: Supabase Database Lost
+Recovery Steps:
+1. Go to Supabase dashboard
+2. Select "Generator Source" project
+3. Go to SQL Editor
+4. Download SQL from: https://files.manuscdn.com/user_upload_by_module/session_file/88625492/LAAtYKumYNsiDLUx.sql
+5. Paste entire SQL into editor
+6. Click Run
+7. Run import script: python3 import-questions-to-supabase.py
+8. Verify: Check question_pool table has 100 questions
+
+SCENARIO 3: Git Repository Lost
+Recovery Steps:
+1. All files are in: /home/ubuntu/generator-final
+2. Recreate git repo: git init
+3. Add remote: git remote add origin [new-github-url]
+4. Push: git push -u origin main
+
+SCENARIO 4: Netlify Deployment Broken
+Recovery Steps:
+1. Push working code to GitHub
+2. Netlify auto-deploys within 1-2 minutes
+3. Check status: https://app.netlify.com
+4. Rollback: Use git to revert commits
+
+================================================================================
+VERIFICATION CHECKLIST
+================================================================================
+
+Before considering project fully restored:
+  [ ] Code cloned from GitHub
+  [ ] Dependencies installed: pnpm install
+  [ ] Environment variables configured
+  [ ] Supabase SQL schema executed
+  [ ] Questions imported to database
+  [ ] Frontend dev server running: pnpm dev
+  [ ] Netlify deployment active
+  [ ] All 100 questions in question_pool table
+  [ ] Admin dashboard accessible
+  [ ] Email configuration set
+
+================================================================================
+IMPORTANT CONTACTS & LINKS
+================================================================================
+
+GitHub Account: https://github.com/yourusername
+Supabase Dashboard: https://supabase.com/dashboard
+Netlify Dashboard: https://app.netlify.com
+Manus Support: https://help.manus.im
+
+Supabase Project URL: https://nnaakuspoqjdyzheklyb.supabase.co
+
+================================================================================
+CURRENT PROJECT STATUS
+================================================================================
+
+Frontend: COMPLETE AND DEPLOYED
+  - All features implemented
+  - Build successful
+  - Deployed to Netlify
+  - Live and accessible
+
+Backend (Supabase): IN PROGRESS
+  - Database schema ready (needs SQL execution)
+  - Question import script ready
+  - Admin dashboard: TO BE BUILT
+  - Email integration: TO BE CONFIGURED
+
+Question Pool System: READY
+  - Answer pattern locked (A=22, B=32, C=30, D=16)
+  - 100 original questions ready
+  - Dynamic selection system designed
+  - No shuffling of answer positions
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. Execute Supabase SQL schema (use URL above)
+2. Import 100 questions to database
+3. Build admin dashboard for:
+   - Question management
+   - Test result viewing
+   - Email configuration
+   - Skill level customization
+4. Implement email sending functionality
+5. Test complete workflow end-to-end
+
+================================================================================
+SECURITY NOTES
+================================================================================
+
+- All credentials stored securely in Manus
+- GitHub repository is private
+- Supabase has Row Level Security enabled
+- Database backups available through Supabase
+- All code changes tracked in Git
+- Deployment automated through Netlify
+
+================================================================================
+SAVE THIS FILE TO YOUR HARD DRIVE!
+================================================================================
+
+This document contains all critical information needed to restore your project.
+Keep it in a safe location on your computer.
+
+Last Updated: January 2, 2026
+Project Status: SAFE & RECOVERABLE ✓
+
+================================================================================

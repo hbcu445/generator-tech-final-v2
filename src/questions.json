@@ -1188,10 +1188,10 @@
   {
     "question": "What is the typical voltage regulation tolerance for a quality automatic voltage regulator (AVR)?",
     "options": [
-      "A-±1%",
-      "B-±3%",
-      "C-±5%",
-      "D-±10%"
+      "A-\u00b11%",
+      "B-\u00b13%",
+      "C-\u00b15%",
+      "D-\u00b110%"
     ],
     "correct_answer_letter": "A"
   }
