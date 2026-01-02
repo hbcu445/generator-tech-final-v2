@@ -182,9 +182,11 @@ export default function App() {
         <div className="container mx-auto px-4 py-12 max-w-4xl">
           {/* Header */}
           <div className="text-center mb-12">
-            <div className="inline-block bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-semibold mb-4">
-              Generator Source
-            </div>
+            <img 
+              src="/generator-source-logo.jpg" 
+              alt="Generator Source" 
+              className="mx-auto mb-6 h-14"
+            />
             <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
               Generator Technician Knowledge Test
             </h1>
@@ -323,6 +325,16 @@ export default function App() {
                 CLICK HERE TO START
               </button>
             </div>
+          </div>
+          
+          {/* Footer */}
+          <div className="mt-8 flex items-center justify-start">
+            <img 
+              src="/davinci-logo.png" 
+              alt="DaVinci.AI" 
+              className="h-12 opacity-70"
+            />
+            <span className="ml-2 text-sm text-gray-500">© 2026 DaVinci.AI</span>
           </div>
         </div>
       </div>
