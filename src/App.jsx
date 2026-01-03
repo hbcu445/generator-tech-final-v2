@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { jsPDF } from 'jspdf';
-import questions from './questions.json';
 import { getExplanationByNumber } from './questionExplanations';
+
+const SUPABASE_URL = 'https://nnaakuspoqjdyzheklyb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_JInuN0N2KjxYViZTrt_M-Q_dSAZFdCf';
 
 export default function App() {
   const [stage, setStage] = useState('landing'); // landing, test, results
@@ -12,6 +14,8 @@ export default function App() {
     branch: '',
     skillLevel: ''
   });
+  const [questions, setQuestions] = useState([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(90 * 60); // 90 minutes in seconds
@@ -21,6 +25,43 @@ export default function App() {
   const [timeTaken, setTimeTaken] = useState(0);
   const [showReport, setShowReport] = useState(false);
   const timerRef = useRef(null);
+
+  // Load questions from Supabase
+  useEffect(() => {
+    async function loadQuestions() {
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/questions?order=question_number.asc`, {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+        
+        // Transform Supabase format to app format
+        const transformedQuestions = data.map(q => ({
+          number: q.question_number,
+          category: q.category,
+          question: q.question_text,
+          options: [
+            `A-${q.answer_a}`,
+            `B-${q.answer_b}`,
+            `C-${q.answer_c}`,
+            `D-${q.answer_d}`
+          ],
+          correct_answer_letter: q.correct_answer_letter
+        }));
+        
+        setQuestions(transformedQuestions);
+        setLoadingQuestions(false);
+      } catch (error) {
+        console.error('Error loading questions:', error);
+        alert('Error loading questions from database');
+        setLoadingQuestions(false);
+      }
+    }
+    loadQuestions();
+  }, []);
 
   // Timer effect
   useEffect(() => {
@@ -215,28 +256,85 @@ export default function App() {
     const results = calculateResults();
     setStage('results');
 
+    // Save results to Supabase database
+    try {
+      const saveResponse = await fetch(`${SUPABASE_URL}/rest/v1/results`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          applicant_name: userData.name,
+          applicant_email: userData.email,
+          applicant_phone: userData.phone,
+          branch: userData.branch,
+          skill_level: userData.skillLevel,
+          score: results.correct,
+          total_questions: results.total,
+          percentage: results.percentage,
+          passed: results.passed,
+          test_date: new Date().toISOString(),
+          time_taken_seconds: timeSpent,
+          answers: JSON.stringify(answers)
+        })
+      });
+      
+      if (!saveResponse.ok) {
+        console.error('Failed to save results to database');
+      }
+    } catch (err) {
+      console.error('Error saving results:', err);
+    }
+
     // Generate certificate PDF
     const certificate = generateCertificate(results);
-    const pdfBlob = certificate.output('blob');
+    const pdfBase64 = certificate.output('datauristring').split(',')[1]; // Get base64 without data URI prefix
+
+    // Fetch branch manager email from Supabase
+    let branchManagerEmail = null;
+    try {
+      const managerResponse = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?branch_location=eq.${encodeURIComponent(userData.branch)}&role=eq.admin&select=email`, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      const managers = await managerResponse.json();
+      if (managers && managers.length > 0) {
+        branchManagerEmail = managers[0].email;
+      }
+    } catch (err) {
+      console.error('Error fetching branch manager:', err);
+    }
 
     // Send email via Netlify function
     try {
-      const formData = new FormData();
-      formData.append('name', userData.name);
-      formData.append('email', userData.email);
-      formData.append('phone', userData.phone);
-      formData.append('branch', userData.branch);
-      formData.append('skillLevel', userData.skillLevel);
-      formData.append('score', results.correct);
-      formData.append('total', results.total);
-      formData.append('percentage', results.percentage);
-      formData.append('passed', results.passed);
-      formData.append('certificate', pdfBlob, 'certificate.pdf');
+      const emailPayload = {
+        applicantName: userData.name,
+        applicantEmail: userData.email,
+        phone: userData.phone,
+        branch: userData.branch,
+        skillLevel: userData.skillLevel,
+        score: results.correct,
+        total: results.total,
+        percentage: results.percentage,
+        passed: results.passed,
+        certificateBase64: pdfBase64,
+        branchManagerEmail: branchManagerEmail
+      };
 
-      await fetch('/.netlify/functions/send-results', {
+      await fetch('/.netlify/functions/send-results-email', {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(emailPayload)
       });
+      
+      console.log('Results and certificate sent successfully');
     } catch (error) {
       console.error('Email sending failed:', error);
     }
@@ -391,6 +489,21 @@ export default function App() {
     
     doc.save(`${userData.name}_Detailed_Report.pdf`);
   };
+
+  // Show loading while questions are being fetched
+  if (loadingQuestions) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-semibold mb-4">
+            Generator Source
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Loading Questions...</h2>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
 
   // Landing Page
   if (stage === 'landing') {
