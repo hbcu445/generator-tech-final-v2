@@ -258,9 +258,13 @@ export default function App() {
 
     // Generate certificate PDF first
     const certificate = generateCertificate(results);
-    const pdfBase64 = certificate.output('datauristring').split(',')[1]; // Get base64 without data URI prefix
+    const certificateBase64 = certificate.output('datauristring').split(',')[1]; // Get base64 without data URI prefix
 
-    // Save results to Supabase database with certificate
+    // Generate detailed report PDF
+    const report = generateReport(results, timeSpent);
+    const reportBase64 = report.output('datauristring').split(',')[1];
+
+    // Save results to Supabase database with both certificate and report
     // The database trigger will automatically send emails via Edge Function
     try {
       const saveResponse = await fetch(`${SUPABASE_URL}/rest/v1/results`, {
@@ -284,12 +288,49 @@ export default function App() {
           test_date: new Date().toISOString(),
           time_taken_seconds: timeSpent,
           answers: JSON.stringify(answers),
-          certificate_pdf: pdfBase64  // Save certificate as base64
+          certificate_pdf: certificateBase64,  // Save certificate as base64
+          report_pdf: reportBase64  // Save report as base64
         })
       });
       
       if (saveResponse.ok) {
-        console.log('Results saved successfully. Email will be sent automatically.');
+        console.log('Results saved successfully.');
+        
+        // Call Edge Function to send emails
+        try {
+          const emailResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-test-results-email`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              record: {
+                applicant_name: userData.name,
+                applicant_email: userData.email,
+                applicant_phone: userData.phone,
+                branch: userData.branch,
+                skill_level: userData.skillLevel,
+                score: results.correct,
+                total_questions: results.total,
+                percentage: results.percentage,
+                passed: results.passed,
+                test_date: new Date().toISOString(),
+                time_taken_seconds: timeSpent,
+                certificate_pdf: certificateBase64,
+                report_pdf: reportBase64
+              }
+            })
+          });
+          
+          if (emailResponse.ok) {
+            console.log('Email sent successfully via Edge Function');
+          } else {
+            console.error('Failed to send email:', await emailResponse.text());
+          }
+        } catch (emailErr) {
+          console.error('Error calling Edge Function:', emailErr);
+        }
       } else {
         console.error('Failed to save results to database');
       }
@@ -326,17 +367,16 @@ export default function App() {
     return incorrect;
   };
 
-  const downloadReport = () => {
+  // Generate report PDF (returns jsPDF object)
+  const generateReport = (results, timeSpent) => {
     const doc = new jsPDF();
     const incorrectAnswers = getIncorrectAnswers();
-    const results = calculateResults();
     
     // Header with dark blue background (matching Generator Source logo)
     doc.setFillColor(30, 58, 95); // Dark navy blue
     doc.rect(0, 0, 210, 40, 'F');
     
     // Logo on left side
-    // Using new blue logo
     try {
       doc.addImage('/generator-source-logo-blue.jpg', 'JPEG', 15, 10, 35, 11);
     } catch (e) {
@@ -359,13 +399,13 @@ export default function App() {
     doc.text(`Branch: ${userData.branch}`, 20, yPos + 12);
     doc.text(`Skill Level: ${userData.skillLevel}`, 20, yPos + 18);
     doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, yPos + 24);
-    doc.text(`Time Taken: ${formatTime(timeTaken)}`, 20, yPos + 30);
+    doc.text(`Time Taken: ${formatTime(timeSpent)}`, 20, yPos + 30);
     doc.text(`Pauses: ${pauseCount}`, 20, yPos + 36);
     
     // Score Summary
     yPos += 50;
     doc.setFontSize(14);
-    doc.setTextColor(30, 58, 95); // Dark navy blue
+    doc.setTextColor(30, 58, 95);
     doc.text('Score Summary', 20, yPos);
     doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
@@ -388,19 +428,16 @@ export default function App() {
       incorrectAnswers.forEach((item, index) => {
         yPos += 10;
         
-        // Check if we need a new page
         if (yPos > 270) {
           doc.addPage();
           yPos = 20;
         }
         
-        // Question
         doc.setFont(undefined, 'bold');
         const questionLines = doc.splitTextToSize(`Q${item.questionNumber}: ${item.question}`, 170);
         doc.text(questionLines, 20, yPos);
         yPos += questionLines.length * 5;
         
-        // Your Answer
         doc.setFont(undefined, 'normal');
         doc.setTextColor(220, 38, 38);
         doc.text('Your Answer:', 20, yPos);
@@ -409,7 +446,6 @@ export default function App() {
         doc.text(userAnswerLines, 50, yPos);
         yPos += Math.max(5, userAnswerLines.length * 5);
         
-        // Correct Answer
         doc.setTextColor(34, 197, 94);
         doc.text('Correct Answer:', 20, yPos);
         doc.setTextColor(0, 0, 0);
@@ -417,7 +453,6 @@ export default function App() {
         doc.text(correctAnswerLines, 50, yPos);
         yPos += Math.max(5, correctAnswerLines.length * 5);
         
-        // Explanation
         doc.setTextColor(37, 99, 235);
         doc.text('Explanation:', 20, yPos);
         doc.setTextColor(0, 0, 0);
@@ -425,7 +460,6 @@ export default function App() {
         doc.text(explanationLines, 20, yPos + 5);
         yPos += explanationLines.length * 5 + 8;
         
-        // Separator line
         doc.setDrawColor(200, 200, 200);
         doc.line(20, yPos, 190, yPos);
       });
@@ -445,7 +479,13 @@ export default function App() {
       doc.text(`Generator Source - Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
     }
     
-    doc.save(`${userData.name}_Detailed_Report.pdf`);
+    return doc;
+  };
+
+  const downloadReport = () => {
+    const results = calculateResults();
+    const report = generateReport(results, timeTaken);
+    report.save(`${userData.name}_Detailed_Report.pdf`);
   };
 
   // Show loading while questions are being fetched
