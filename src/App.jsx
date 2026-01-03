@@ -256,7 +256,12 @@ export default function App() {
     const results = calculateResults();
     setStage('results');
 
-    // Save results to Supabase database
+    // Generate certificate PDF first
+    const certificate = generateCertificate(results);
+    const pdfBase64 = certificate.output('datauristring').split(',')[1]; // Get base64 without data URI prefix
+
+    // Save results to Supabase database with certificate
+    // The database trigger will automatically send emails via Edge Function
     try {
       const saveResponse = await fetch(`${SUPABASE_URL}/rest/v1/results`, {
         method: 'POST',
@@ -278,65 +283,18 @@ export default function App() {
           passed: results.passed,
           test_date: new Date().toISOString(),
           time_taken_seconds: timeSpent,
-          answers: JSON.stringify(answers)
+          answers: JSON.stringify(answers),
+          certificate_pdf: pdfBase64  // Save certificate as base64
         })
       });
       
-      if (!saveResponse.ok) {
+      if (saveResponse.ok) {
+        console.log('Results saved successfully. Email will be sent automatically.');
+      } else {
         console.error('Failed to save results to database');
       }
     } catch (err) {
       console.error('Error saving results:', err);
-    }
-
-    // Generate certificate PDF
-    const certificate = generateCertificate(results);
-    const pdfBase64 = certificate.output('datauristring').split(',')[1]; // Get base64 without data URI prefix
-
-    // Fetch branch manager email from Supabase
-    let branchManagerEmail = null;
-    try {
-      const managerResponse = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?branch_location=eq.${encodeURIComponent(userData.branch)}&role=eq.admin&select=email`, {
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`
-        }
-      });
-      const managers = await managerResponse.json();
-      if (managers && managers.length > 0) {
-        branchManagerEmail = managers[0].email;
-      }
-    } catch (err) {
-      console.error('Error fetching branch manager:', err);
-    }
-
-    // Send email via Netlify function
-    try {
-      const emailPayload = {
-        applicantName: userData.name,
-        applicantEmail: userData.email,
-        phone: userData.phone,
-        branch: userData.branch,
-        skillLevel: userData.skillLevel,
-        score: results.correct,
-        total: results.total,
-        percentage: results.percentage,
-        passed: results.passed,
-        certificateBase64: pdfBase64,
-        branchManagerEmail: branchManagerEmail
-      };
-
-      await fetch('/.netlify/functions/send-results-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(emailPayload)
-      });
-      
-      console.log('Results and certificate sent successfully');
-    } catch (error) {
-      console.error('Email sending failed:', error);
     }
   };
 
