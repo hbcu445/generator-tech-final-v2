@@ -102,9 +102,9 @@ export default function App() {
     doc.rect(15, 15, 267, 180);
 
     // Logo (using base64 or image URL)
-    const logoPath = '/generator-source-logo.jpg';
+    // Using new blue logo
     try {
-      doc.addImage(logoPath, 'JPEG', 125, 25, 47, 15);
+      doc.addImage('/generator-source-logo-blue.jpg', 'JPEG', 125, 25, 47, 15);
     } catch (e) {
       console.log('Logo not embedded in PDF');
     }
@@ -280,9 +280,9 @@ export default function App() {
     doc.rect(0, 0, 210, 40, 'F');
     
     // Logo on left side
-    const logoPath = '/generator-source-logo.jpg';
+    // Using new blue logo
     try {
-      doc.addImage(logoPath, 'JPEG', 15, 10, 35, 11);
+      doc.addImage('/generator-source-logo-blue.jpg', 'JPEG', 15, 10, 35, 11);
     } catch (e) {
       console.log('Logo not embedded in PDF');
     }
