@@ -10,6 +10,8 @@
   "packageManager": "pnpm@10.26.2",
   "dependencies": {
     "@sendgrid/client": "^8.1.6",
+    "@sendgrid/eventwebhook": "^8.0.0",
+    "@sendgrid/helpers": "^8.0.0",
     "@sendgrid/mail": "^8.1.6",
     "jspdf": "^3.0.4",
     "react": "^19.2.3",
