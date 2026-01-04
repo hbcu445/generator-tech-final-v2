@@ -393,7 +393,9 @@ export default function App() {
               score: results.correct,
               total: results.total,
               percentage: results.percentage,
-              passed: results.passed
+              passed: results.passed,
+              certificatePdf: certificateBase64,
+              reportPdf: reportBase64
             })
           });
           
@@ -889,14 +891,14 @@ export default function App() {
                   NEXT →
                 </button>
               )}
-            </div>
+             </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // Confirmation Page
+  // Main render Page
   if (stage === 'confirmation') {
     const timeSpent = (90 * 60) - timeLeft;
     const minutes = Math.floor(timeSpent / 60);
@@ -992,12 +994,13 @@ export default function App() {
 
   // Results Page
   if (stage === 'results') {
-    const results = calculateResults();
-    
-    // Results page is shown after handleConfirmSubmit completes
-    // No need for auto-submit here
+    try {
+      const results = calculateResults();
+      
+      // Results page is shown after handleConfirmSubmit completes
+      // No need for auto-submit here
 
-    return (
+      return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-12">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="bg-white rounded-2xl shadow-xl p-8">
@@ -1160,6 +1163,24 @@ export default function App() {
           </div>
         </div>
       </div>
-    );
+      );
+    } catch (error) {
+      console.error('Error rendering results page:', error);
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-12 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Results</h1>
+            <p className="text-gray-600 mb-4">Your test was submitted successfully and results were emailed to you.</p>
+            <p className="text-sm text-gray-500 mb-4">Error: {error.message}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700"
+            >
+              Return to Home
+            </button>
+          </div>
+        </div>
+      );
+    }
   }
 }

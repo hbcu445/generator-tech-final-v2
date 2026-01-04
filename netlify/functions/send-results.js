@@ -10,7 +10,7 @@ exports.handler = async (event) => {
   try {
     // Parse form data
     const body = JSON.parse(event.body);
-    const { name, email, phone, branch, skillLevel, score, total, percentage, passed } = body;
+    const { name, email, phone, branch, skillLevel, score, total, percentage, passed, certificatePdf, reportPdf } = body;
 
     // Email content
     const emailHtml = `
@@ -90,7 +90,13 @@ exports.handler = async (event) => {
       content: [{
         type: 'text/html',
         value: emailHtml
-      }]
+      }],
+      attachments: reportPdf ? [{
+        content: reportPdf,
+        filename: `${name.replace(/[^a-z0-9]/gi, '_')}_Test_Report.pdf`,
+        type: 'application/pdf',
+        disposition: 'attachment'
+      }] : []
     };
 
     // Email to company
@@ -106,7 +112,13 @@ exports.handler = async (event) => {
       content: [{
         type: 'text/html',
         value: emailHtml
-      }]
+      }],
+      attachments: reportPdf ? [{
+        content: reportPdf,
+        filename: `${name.replace(/[^a-z0-9]/gi, '_')}_Test_Report.pdf`,
+        type: 'application/pdf',
+        disposition: 'attachment'
+      }] : []
     };
 
     // Send both emails using fetch
