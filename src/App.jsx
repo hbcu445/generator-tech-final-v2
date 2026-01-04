@@ -143,13 +143,16 @@ export default function App() {
     doc.setLineWidth(0.3);
     doc.rect(15, 15, 267, 180);
 
-    // Logo (using base64 or image URL)
-    // Using new blue logo
-    try {
-      doc.addImage('/generator-source-logo-blue.jpg', 'JPEG', 125, 25, 47, 15);
-    } catch (e) {
-      console.log('Logo not embedded in PDF');
-    }
+    // Company name header
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 58, 95); // Dark navy blue
+    doc.text('Generator Source', 148.5, 30, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100); // Gray
+    doc.text('Leader in Power Generation since 1981', 148.5, 37, { align: 'center' });
 
     // Title
     doc.setFontSize(36);
