@@ -24,6 +24,7 @@ export default function App() {
   const [pauseCount, setPauseCount] = useState(0);
   const [timeTaken, setTimeTaken] = useState(0);
   const [showReport, setShowReport] = useState(false);
+  const [achievedLevel, setAchievedLevel] = useState(null);
   const timerRef = useRef(null);
 
   // Load questions from Supabase
@@ -86,10 +87,26 @@ export default function App() {
   };
 
   const handleStartTest = () => {
-    if (!userData.name || !userData.email || !userData.phone || !userData.branch || !userData.skillLevel) {
+    // Check if test mode is enabled via URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const testMode = urlParams.get('testMode') === 'true';
+    
+    if (!testMode && (!userData.name || !userData.email || !userData.phone || !userData.branch || !userData.skillLevel)) {
       alert('Please fill in all fields');
       return;
     }
+    
+    // Use test data if test mode is enabled
+    if (testMode) {
+      setUserData({
+        name: 'Test Technician',
+        email: 'test@generatorsource.com',
+        phone: '(555) 123-4567',
+        branch: 'Brighton, CO',
+        skillLevel: 'Level 2 Advanced'
+      });
+    }
+    
     setTestStartTime(new Date());
     setStage('test');
   };
@@ -119,7 +136,29 @@ export default function App() {
     });
     const percentage = (correct / questions.length) * 100;
     const passed = percentage >= 70;
-    return { correct, total: questions.length, percentage: percentage.toFixed(1), passed };
+    
+    const defaultLevels = [
+      { level: 1, level_name: 'Beginner', min_percentage: 25, max_percentage: 40 },
+      { level: 2, level_name: 'Advanced', min_percentage: 41, max_percentage: 59 },
+      { level: 3, level_name: 'Pro', min_percentage: 60, max_percentage: 85 },
+      { level: 4, level_name: 'Master', min_percentage: 86, max_percentage: 100 }
+    ];
+    
+    const levels = JSON.parse(localStorage.getItem('scoringLevels')) || defaultLevels;
+    let level = null;
+    for (const l of levels) {
+      if (percentage >= l.min_percentage && percentage <= l.max_percentage) {
+        level = l;
+        break;
+      }
+    }
+    
+    if (!level) {
+      level = { level: 0, level_name: 'Below Beginner', min_percentage: 0, max_percentage: 24 };
+    }
+    
+    setAchievedLevel(level);
+    return { correct, total: questions.length, percentage: percentage.toFixed(1), passed, level };
   };
 
   const generateCertificate = (results) => {
@@ -249,6 +288,17 @@ export default function App() {
   };
 
   const handleSubmitTest = async () => {
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      "Are you sure you want to finish and submit your test?\n\n" +
+      "Once submitted, you cannot change your answers.\n\n" +
+      "Click OK to submit your test and view your results."
+    );
+    
+    if (!confirmed) {
+      return; // User cancelled, don't submit
+    }
+    
     // Calculate time taken
     const timeSpent = (90 * 60) - timeLeft;
     setTimeTaken(timeSpent);
@@ -265,8 +315,8 @@ export default function App() {
     const reportBase64 = report.output('datauristring').split(',')[1];
 
     // Save results to Supabase database with both certificate and report
-    // The database trigger will automatically send emails via Edge Function
     try {
+      console.log('Saving results to database...');
       const saveResponse = await fetch(`${SUPABASE_URL}/rest/v1/results`, {
         method: 'POST',
         headers: {
@@ -288,48 +338,50 @@ export default function App() {
           test_date: new Date().toISOString(),
           time_taken_seconds: timeSpent,
           answers: JSON.stringify(answers),
-          certificate_pdf: certificateBase64,  // Save certificate as base64
-          report_pdf: reportBase64  // Save report as base64
+          certificate_pdf: certificateBase64,
+          report_pdf: reportBase64
         })
       });
       
+      console.log('Save response status:', saveResponse.status);
+      const responseText = await saveResponse.text();
+      console.log('Save response:', responseText);
+      
       if (saveResponse.ok) {
-        console.log('Results saved successfully.');
+        console.log('Results saved successfully to database.');
         
-        // Call Edge Function to send emails
+        // Send email via SendGrid API directly
         try {
-          const emailResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-test-results-email`, {
+          const sendgridResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Authorization': `Bearer ${import.meta.env.VITE_SENDGRID_API_KEY || 'SG.test'}`,
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              record: {
-                applicant_name: userData.name,
-                applicant_email: userData.email,
-                applicant_phone: userData.phone,
-                branch: userData.branch,
-                skill_level: userData.skillLevel,
-                score: results.correct,
-                total_questions: results.total,
-                percentage: results.percentage,
-                passed: results.passed,
-                test_date: new Date().toISOString(),
-                time_taken_seconds: timeSpent,
-                certificate_pdf: certificateBase64,
-                report_pdf: reportBase64
-              }
+              personalizations: [
+                {
+                  to: [{ email: userData.email, name: userData.name }],
+                  subject: `Generator Technician Test Results - ${results.passed ? 'PASSED' : 'NOT PASSED'}`
+                }
+              ],
+              from: { email: 'noreply@generatorsource.com', name: 'Generator Source' },
+              content: [
+                {
+                  type: 'text/html',
+                  value: `<h1>Test Results</h1><p>Score: ${results.percentage}% (${results.correct}/${results.total})</p><p>Status: ${results.passed ? 'PASSED' : 'NOT PASSED'}</p>`
+                }
+              ]
             })
           });
           
-          if (emailResponse.ok) {
-            console.log('Email sent successfully via Edge Function');
+          if (sendgridResponse.ok) {
+            console.log('Email sent successfully via SendGrid');
           } else {
-            console.error('Failed to send email:', await emailResponse.text());
+            console.error('Failed to send email via SendGrid:', await sendgridResponse.text());
           }
         } catch (emailErr) {
-          console.error('Error calling Edge Function:', emailErr);
+          console.error('Error sending email:', emailErr);
         }
       } else {
         console.error('Failed to save results to database');
@@ -666,6 +718,24 @@ export default function App() {
   // Test Page
   if (stage === 'test') {
     const question = questions[currentQuestion];
+    
+    // Safety check: if question doesn't exist, reset to last valid question
+    if (!question && questions.length > 0) {
+      setCurrentQuestion(questions.length - 1);
+      return null;
+    }
+    
+    // If no questions loaded yet, show loading
+    if (!question) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-gray-800 mb-4">Loading question...</div>
+          </div>
+        </div>
+      );
+    }
+    
     const progress = ((currentQuestion + 1) / questions.length) * 100;
 
     return (
@@ -797,6 +867,14 @@ export default function App() {
   // Results Page
   if (stage === 'results') {
     const results = calculateResults();
+    
+    // Auto-submit results when results page is shown
+    useEffect(() => {
+      if (stage === 'results' && !showReport) {
+        handleSubmitTest();
+        setShowReport(true);
+      }
+    }, [stage]);
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-12">
@@ -906,6 +984,12 @@ export default function App() {
                 className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg font-bold hover:from-green-600 hover:to-green-700 transition shadow-lg"
               >
                 ⬇️ Download Detailed Report PDF
+              </button>
+              <button
+                onClick={handleSubmitTest}
+                className="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white py-4 rounded-lg font-bold hover:from-purple-600 hover:to-purple-700 transition shadow-lg"
+              >
+                ✓ Submit Results
               </button>
             </div>
 
