@@ -6,7 +6,7 @@ const SUPABASE_URL = 'https://nnaakuspoqjdyzheklyb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_JInuN0N2KjxYViZTrt_M-Q_dSAZFdCf';
 
 export default function App() {
-  const [stage, setStage] = useState('landing'); // landing, test, results
+  const [stage, setStage] = useState('landing'); // landing, test, confirmation, results
   const [userData, setUserData] = useState({
     name: '',
     email: '',
@@ -52,6 +52,14 @@ export default function App() {
           ],
           correct_answer_letter: q.correct_answer_letter
         }));
+        
+        // Validate that we have exactly 100 questions
+        if (transformedQuestions.length !== 100) {
+          console.error(`Error: Expected 100 questions, but got ${transformedQuestions.length}`);
+          alert(`Error: The test database has ${transformedQuestions.length} questions. It must have exactly 100 questions. Please contact support.`);
+          setLoadingQuestions(false);
+          return;
+        }
         
         setQuestions(transformedQuestions);
         setLoadingQuestions(false);
@@ -303,12 +311,18 @@ export default function App() {
     const timeSpent = (90 * 60) - timeLeft;
     setTimeTaken(timeSpent);
     
+    // Go to confirmation page
+    setStage('confirmation');
+  };
+
+  const handleConfirmSubmit = async () => {
+    // Calculate time taken
+    const timeSpent = (90 * 60) - timeLeft;
     const results = calculateResults();
-    setStage('results');
 
     // Generate certificate PDF first
     const certificate = generateCertificate(results);
-    const certificateBase64 = certificate.output('datauristring').split(',')[1]; // Get base64 without data URI prefix
+    const certificateBase64 = certificate.output('datauristring').split(',')[1];
 
     // Generate detailed report PDF
     const report = generateReport(results, timeSpent);
@@ -386,8 +400,12 @@ export default function App() {
       } else {
         console.error('Failed to save results to database');
       }
+      
+      // Go to results page
+      setStage('results');
     } catch (err) {
       console.error('Error saving results:', err);
+      alert('Error saving results. Please try again.');
     }
   };
 
@@ -857,6 +875,100 @@ export default function App() {
                   NEXT →
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Confirmation Page
+  if (stage === 'confirmation') {
+    const timeSpent = (90 * 60) - timeLeft;
+    const minutes = Math.floor(timeSpent / 60);
+    const seconds = timeSpent % 60;
+    const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-2xl">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-12">
+            <div className="text-center mb-8">
+              <div className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold inline-block mb-4">
+                Generator Source
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+                Test Submission Confirmation
+              </h1>
+              <p className="text-gray-600">Please verify your information before submitting</p>
+            </div>
+
+            <div className="bg-blue-50 rounded-xl p-6 mb-8 border-2 border-blue-200">
+              <h2 className="text-xl font-bold text-gray-800 mb-6">Applicant Information</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">Full Name</label>
+                  <div className="bg-white p-3 rounded-lg border-2 border-gray-200">
+                    <p className="text-lg text-gray-800 font-semibold">{userData.name}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">Email Address</label>
+                  <div className="bg-white p-3 rounded-lg border-2 border-gray-200">
+                    <p className="text-lg text-gray-800 font-semibold">{userData.email}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">Phone Number</label>
+                  <div className="bg-white p-3 rounded-lg border-2 border-gray-200">
+                    <p className="text-lg text-gray-800 font-semibold">{userData.phone}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">Test Date</label>
+                  <div className="bg-white p-3 rounded-lg border-2 border-gray-200">
+                    <p className="text-lg text-gray-800 font-semibold">{new Date().toLocaleDateString()}</p>
+                  </div>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">Time Taken to Complete Test</label>
+                  <div className="bg-white p-3 rounded-lg border-2 border-gray-200">
+                    <p className="text-lg text-gray-800 font-semibold">{timeString} (minutes:seconds)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 rounded-xl p-6 mb-8 border-2 border-yellow-200">
+              <div className="flex gap-4">
+                <div className="text-3xl">⚠️</div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800 mb-3">Official Declaration</h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    <strong>I hereby confirm that I have completed this Generator Technician Skills Assessment independently, without any assistance from others, without any outside help, and without the use of electronic devices or reference materials. By clicking Submit, I certify that all answers provided are my own work and reflect my true knowledge and abilities.</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 flex-col sm:flex-row">
+              <button
+                onClick={() => setStage('test')}
+                className="flex-1 px-6 py-3 bg-gray-300 text-gray-800 rounded-lg font-bold hover:bg-gray-400 transition"
+              >
+                ← Back to Test
+              </button>
+              <button
+                onClick={handleConfirmSubmit}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-bold hover:from-green-600 hover:to-green-700 transition shadow-lg"
+              >
+                Submit Test & View Results
+              </button>
             </div>
           </div>
         </div>
