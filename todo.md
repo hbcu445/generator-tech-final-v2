@@ -80,8 +80,8 @@
 ### BUG #2: SUBMIT TEST Button Not Working
 - [x] Diagnose why SUBMIT TEST button clicks don't trigger the handler (window.confirm was being blocked)
 - [x] Fix the Supabase table name from 'results' to 'test_results'
-- [ ] Test button functionality
-- [ ] Rebuild and redeploy
+- [x] Test button functionality
+- [x] Rebuild and redeploy
 
 ### BUG #1: Email Sending (FIXED)
 - [x] Diagnose why clicking SUBMIT TEST causes blank page instead of showing confirmation page

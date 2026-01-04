@@ -331,7 +331,7 @@ export default function App() {
     // Save results to Supabase database with both certificate and report
     try {
       console.log('Saving results to database...');
-      const saveResponse = await fetch(`${SUPABASE_URL}/rest/v1/test_results`, {
+      const saveResponse = await fetch(`${SUPABASE_URL}/rest/v1/results`, {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
