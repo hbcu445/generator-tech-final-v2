@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { jsPDF } from 'jspdf';
 import { getExplanationByNumber } from './questionExplanations';
+import { LOGO_BASE64, LOGO_BLUE_BASE64 } from './logoConstants';
 
 const SUPABASE_URL = 'https://nnaakuspoqjdyzheklyb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_JInuN0N2KjxYViZTrt_M-Q_dSAZFdCf';
@@ -192,9 +193,9 @@ export default function App() {
     // Logo (using base64 or image URL)
     // Using new blue logo
     try {
-      doc.addImage('/generator-source-logo-blue.jpg', 'JPEG', 125, 25, 47, 15);
+      doc.addImage(LOGO_BLUE_BASE64, 'JPEG', 125, 25, 47, 15);
     } catch (e) {
-      console.log('Logo not embedded in PDF');
+      console.log('Logo not embedded in PDF:', e);
     }
 
     // Title
@@ -463,9 +464,9 @@ export default function App() {
     
     // Logo on left side
     try {
-      doc.addImage('/generator-source-logo-blue.jpg', 'JPEG', 15, 10, 35, 11);
+      doc.addImage(LOGO_BLUE_BASE64, 'JPEG', 15, 10, 35, 11);
     } catch (e) {
-      console.log('Logo not embedded in PDF');
+      console.log('Logo not embedded in PDF:', e);
     }
     
     // Title text on right side
