@@ -365,9 +365,8 @@ export default function App() {
           passed: results.passed,
           test_date: new Date().toISOString(),
           time_taken_seconds: timeSpent,
-          answers: JSON.stringify(answers),
-          certificate_pdf: certificateBase64,
-          report_pdf: reportBase64
+          answers: JSON.stringify(answers)
+          // certificate_pdf and report_pdf removed - columns don't exist in database
         })
       });
       
