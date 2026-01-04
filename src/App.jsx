@@ -190,13 +190,12 @@ export default function App() {
     doc.setLineWidth(0.3);
     doc.rect(15, 15, 267, 180);
 
-    // Logo (using base64 or image URL)
-    // Using new blue logo
-    try {
-      doc.addImage(LOGO_BLUE_BASE64, 'JPEG', 125, 25, 47, 15);
-    } catch (e) {
-      console.log('Logo not embedded in PDF:', e);
-    }
+    // Logo removed to prevent crash - can be added back later if needed
+    // try {
+    //   doc.addImage(LOGO_BLUE_BASE64, 'JPEG', 125, 25, 47, 15);
+    // } catch (e) {
+    //   console.log('Logo not embedded in PDF:', e);
+    // }
 
     // Title
     doc.setFontSize(36);
@@ -462,12 +461,12 @@ export default function App() {
     doc.setFillColor(30, 58, 95); // Dark navy blue
     doc.rect(0, 0, 210, 40, 'F');
     
-    // Logo on left side
-    try {
-      doc.addImage(LOGO_BLUE_BASE64, 'JPEG', 15, 10, 35, 11);
-    } catch (e) {
-      console.log('Logo not embedded in PDF:', e);
-    }
+    // Logo removed to prevent crash - can be added back later if needed
+    // try {
+    //   doc.addImage(LOGO_BLUE_BASE64, 'JPEG', 15, 10, 35, 11);
+    // } catch (e) {
+    //   console.log('Logo not embedded in PDF:', e);
+    // }
     
     // Title text on right side
     doc.setTextColor(255, 255, 255);
