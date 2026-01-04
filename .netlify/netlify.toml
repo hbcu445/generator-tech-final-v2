@@ -1,12 +1,8 @@
-redirectsOrigin = "config"
-plugins = []
 functionsDirectory = "/home/ubuntu/generator-final/netlify/functions"
 functionsDirectoryOrigin = "config-v1"
+redirectsOrigin = "config"
+plugins = []
 headers = []
-
-[functions]
-
-[functions."*"]
 
 [build]
 publish = "/home/ubuntu/generator-final/dist"
@@ -28,6 +24,10 @@ functions = "/home/ubuntu/generator-final/netlify/functions"
 [build.processing.js]
 
 [build.services]
+
+[functions]
+
+[functions."*"]
 
 [[redirects]]
 from = "/*"

@@ -1,0 +1,1 @@
+{"functions":[{"bundler":"zisi","buildData":{"runtimeAPIVersion":1},"mainFile":"/home/ubuntu/generator-final/netlify/functions/send-results.js","name":"send-results","priority":10,"runtimeVersion":"nodejs22.x","path":"/home/ubuntu/generator-final/.netlify/functions/send-results.zip","runtime":"js"}],"system":{"arch":"x64","platform":"linux"},"timestamp":1767508884408,"version":1}
