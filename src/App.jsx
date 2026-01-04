@@ -303,7 +303,7 @@ export default function App() {
         // Look up branch manager email from admin_users table
         let branchManagerEmail = null;
         try {
-          const adminResponse = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?branch=eq.${encodeURIComponent(userData.branch)}`, {
+          const adminResponse = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?location=eq.${encodeURIComponent(userData.branch)}`, {
             headers: {
               'apikey': SUPABASE_KEY,
               'Content-Type': 'application/json'
