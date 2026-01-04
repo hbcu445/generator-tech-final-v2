@@ -24,6 +24,7 @@ export default function App() {
   const [pauseCount, setPauseCount] = useState(0);
   const [timeTaken, setTimeTaken] = useState(0);
   const [showReport, setShowReport] = useState(false);
+  const [generatedCertificate, setGeneratedCertificate] = useState(null);
   const timerRef = useRef(null);
 
   // Load questions from Supabase
@@ -259,9 +260,9 @@ export default function App() {
     // Generate certificate PDF first
     const certificate = generateCertificate(results);
     const pdfBase64 = certificate.output('datauristring').split(',')[1]; // Get base64 without data URI prefix
+    setGeneratedCertificate(certificate); // Store for display on results page
 
     // Save results to Supabase database with certificate
-    // The database trigger will automatically send emails via Edge Function
     try {
       const saveResponse = await fetch(`${SUPABASE_URL}/rest/v1/results`, {
         method: 'POST',
@@ -289,19 +290,75 @@ export default function App() {
       });
       
       if (saveResponse.ok) {
-        console.log('Results saved successfully. Email will be sent automatically.');
+        console.log('✅ Results saved to database');
+        
+        // Look up branch manager email from admin_users table
+        let branchManagerEmail = null;
+        try {
+          const adminResponse = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?branch=eq.${encodeURIComponent(userData.branch)}`, {
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Content-Type': 'application/json'
+            }
+          });
+          const admins = await adminResponse.json();
+          if (admins && admins.length > 0) {
+            branchManagerEmail = admins[0].email;
+            console.log(`✅ Found branch manager: ${branchManagerEmail}`);
+          } else {
+            console.log('⚠️ No branch manager found for this location');
+          }
+        } catch (err) {
+          console.error('Error looking up branch manager:', err);
+        }
+        
+        // Send emails via Netlify function
+        try {
+          const emailResponse = await fetch('/.netlify/functions/send-results-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              applicantName: userData.name,
+              applicantEmail: userData.email,
+              phone: userData.phone,
+              branch: userData.branch,
+              skillLevel: userData.skillLevel,
+              score: results.correct,
+              total: results.total,
+              percentage: results.percentage,
+              passed: results.passed,
+              certificateBase64: pdfBase64,
+              branchManagerEmail: branchManagerEmail
+            })
+          });
+          
+          if (emailResponse.ok) {
+            const emailResult = await emailResponse.json();
+            console.log(`✅ Emails sent successfully to ${emailResult.recipients} recipient(s)`);
+          } else {
+            console.error('❌ Failed to send emails');
+          }
+        } catch (err) {
+          console.error('❌ Error sending emails:', err);
+        }
       } else {
-        console.error('Failed to save results to database');
+        console.error('❌ Failed to save results to database');
       }
     } catch (err) {
-      console.error('Error saving results:', err);
+      console.error('❌ Error saving results:', err);
     }
   };
 
   const downloadCertificate = () => {
-    const results = calculateResults();
-    const certificate = generateCertificate(results);
-    certificate.save(`${userData.name}_Certificate.pdf`);
+    if (generatedCertificate) {
+      generatedCertificate.save(`${userData.name}_Certificate.pdf`);
+    } else {
+      const results = calculateResults();
+      const certificate = generateCertificate(results);
+      certificate.save(`${userData.name}_Certificate.pdf`);
+    }
   };
 
   const getIncorrectAnswers = () => {
@@ -868,6 +925,23 @@ export default function App() {
                 ⬇️ Download Detailed Report PDF
               </button>
             </div>
+
+            {/* Certificate Preview */}
+            {results.passed && generatedCertificate && (
+              <div className="mb-8 border-2 border-blue-200 rounded-xl p-6 bg-blue-50">
+                <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">🎓 Your Certificate</h3>
+                <div className="bg-white rounded-lg p-4 shadow-lg">
+                  <iframe
+                    src={generatedCertificate.output('datauristring')}
+                    className="w-full h-96 border-0 rounded"
+                    title="Certificate Preview"
+                  />
+                </div>
+                <p className="text-center text-sm text-gray-600 mt-4">
+                  ✉️ Your certificate has been emailed to {userData.email}
+                </p>
+              </div>
+            )}
 
             {/* Detailed Report Section - Always Visible */}
             <div className="mt-8 border-t-2 border-gray-200 pt-8">
