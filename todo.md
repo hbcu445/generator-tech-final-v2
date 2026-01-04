@@ -77,7 +77,9 @@
 
 ## CRITICAL BUG FIX - Test Application
 
-### BUG #2: SUBMIT TEST Button Not Working
+### BUG #2: SUBMIT TEST Button Not Working (FIXED)
+- Root cause: window.confirm dialog blocking automation
+- Root cause #2: Wrong table name 'test_results' instead of 'results'
 - [x] Diagnose why SUBMIT TEST button clicks don't trigger the handler (window.confirm was being blocked)
 - [x] Fix the Supabase table name from 'results' to 'test_results'
 - [x] Test button functionality
@@ -92,3 +94,25 @@
 - [ ] Verify email delivery to ofingado@yahoo.com
 - [ ] Verify certificate generation for passing score
 - [ ] Verify admin portal displays test results
+
+## Manual Test In Progress
+
+## System Documentation
+- [x] Created comprehensive system documentation
+- [x] Documented all API keys and credentials
+- [x] Documented database schema
+- [x] Documented deployment procedures
+- [x] Documented troubleshooting guide
+- [ ] User completing manual test with all D answers
+- [ ] Verify results saved to Supabase database
+- [ ] Verify email sent to ofingado@yahoo.com
+- [ ] Verify results appear in admin portal
+
+
+## CRITICAL BUG #3: handleConfirmSubmit Crash
+- [x] Diagnose crash using browser console errors
+- [x] Identify root cause of crash: React Hooks error - "Rendered more hooks than during the previous render" when transitioning to results page
+- [x] Fix the bug in App.jsx (removed problematic useEffect calling handleSubmitTest on results page)
+- [ ] Rebuild and redeploy
+- [ ] Verify test results save to database
+- [ ] Verify emails are sent

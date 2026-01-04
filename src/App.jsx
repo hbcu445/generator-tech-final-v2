@@ -316,20 +316,34 @@ export default function App() {
   };
 
   const handleConfirmSubmit = async () => {
-    // Calculate time taken
-    const timeSpent = (90 * 60) - timeLeft;
-    const results = calculateResults();
-
-    // Generate certificate PDF first
-    const certificate = generateCertificate(results);
-    const certificateBase64 = certificate.output('datauristring').split(',')[1];
-
-    // Generate detailed report PDF
-    const report = generateReport(results, timeSpent);
-    const reportBase64 = report.output('datauristring').split(',')[1];
-
-    // Save results to Supabase database with both certificate and report
     try {
+      console.log('=== START handleConfirmSubmit ===');
+      
+      // Calculate time taken
+      const timeSpent = (90 * 60) - timeLeft;
+      console.log('Time spent:', timeSpent);
+      
+      const results = calculateResults();
+      console.log('Results calculated:', results);
+
+      // Generate certificate PDF first
+      console.log('Generating certificate...');
+      const certificate = generateCertificate(results);
+      console.log('Certificate generated successfully');
+      
+      const certificateBase64 = certificate.output('datauristring').split(',')[1];
+      console.log('Certificate converted to base64');
+
+      // Generate detailed report PDF
+      console.log('Generating report...');
+      const report = generateReport(results, timeSpent);
+      console.log('Report generated successfully');
+      
+      const reportBase64 = report.output('datauristring').split(',')[1];
+      console.log('Report converted to base64');
+
+      // Save results to Supabase database with both certificate and report
+      console.log('Attempting to save to database...');
       console.log('Saving results to database...');
       const saveResponse = await fetch(`${SUPABASE_URL}/rest/v1/results`, {
         method: 'POST',
@@ -398,10 +412,15 @@ export default function App() {
       }
       
       // Go to results page
+      console.log('Setting stage to results...');
       setStage('results');
+      console.log('=== END handleConfirmSubmit SUCCESS ===');
     } catch (err) {
-      console.error('Error saving results:', err);
-      alert('Error saving results. Please try again.');
+      console.error('=== FATAL ERROR in handleConfirmSubmit ===');
+      console.error('Error type:', err.constructor.name);
+      console.error('Error message:', err.message);
+      console.error('Error stack:', err.stack);
+      alert(`FATAL ERROR: ${err.message}\n\nCheck console for details.`);
     }
   };
 
@@ -976,13 +995,8 @@ export default function App() {
   if (stage === 'results') {
     const results = calculateResults();
     
-    // Auto-submit results when results page is shown
-    useEffect(() => {
-      if (stage === 'results' && !showReport) {
-        handleSubmitTest();
-        setShowReport(true);
-      }
-    }, [stage]);
+    // Results page is shown after handleConfirmSubmit completes
+    // No need for auto-submit here
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-12">
