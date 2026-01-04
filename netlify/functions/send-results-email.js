@@ -27,6 +27,7 @@ exports.handler = async (event, context) => {
       percentage,
       passed,
       certificateBase64,
+      reportBase64,
       branchManagerEmail
     } = formData;
 
@@ -207,7 +208,13 @@ exports.handler = async (event, context) => {
           filename: `${applicantName.replace(/\s+/g, '_')}_Certificate.pdf`,
           type: 'application/pdf',
           disposition: 'attachment'
-        }
+        },
+        ...(reportBase64 ? [{
+          content: reportBase64,
+          filename: `${applicantName.replace(/\s+/g, '_')}_Report.pdf`,
+          type: 'application/pdf',
+          disposition: 'attachment'
+        }] : [])
       ]
     });
 
@@ -365,10 +372,42 @@ exports.handler = async (event, context) => {
             filename: `${applicantName.replace(/\s+/g, '_')}_Certificate.pdf`,
             type: 'application/pdf',
             disposition: 'attachment'
-          }
+          },
+          ...(reportBase64 ? [{
+            content: reportBase64,
+            filename: `${applicantName.replace(/\s+/g, '_')}_Report.pdf`,
+            type: 'application/pdf',
+            disposition: 'attachment'
+          }] : [])
         ]
       });
     }
+
+    // Email to master admin
+    const masterAdminEmail = 'info@powergenequipment.com';
+    messages.push({
+      to: masterAdminEmail,
+      from: {
+        email: process.env.SENDGRID_FROM_EMAIL,
+        name: process.env.SENDGRID_FROM_NAME || 'Generator Source'
+      },
+      subject: `[Admin] Technician Test Completed - ${applicantName} - ${branch} - ${passed ? 'Passed' : 'Not Passed'} (${percentage}%)`,
+      html: managerEmailHTML,
+      attachments: [
+        {
+          content: certificateBase64,
+          filename: `${applicantName.replace(/\s+/g, '_')}_Certificate.pdf`,
+          type: 'application/pdf',
+          disposition: 'attachment'
+        },
+        ...(reportBase64 ? [{
+          content: reportBase64,
+          filename: `${applicantName.replace(/\s+/g, '_')}_Report.pdf`,
+          type: 'application/pdf',
+          disposition: 'attachment'
+        }] : [])
+      ]
+    });
 
     // Send all emails
     await sgMail.send(messages);

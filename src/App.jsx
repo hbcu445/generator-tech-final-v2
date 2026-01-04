@@ -257,10 +257,14 @@ export default function App() {
     const results = calculateResults();
     setStage('results');
 
-    // Generate certificate PDF first
+      // Generate certificate PDF
     const certificate = generateCertificate(results);
-    const pdfBase64 = certificate.output('datauristring').split(',')[1]; // Get base64 without data URI prefix
+    const certificateBase64 = certificate.output('datauristring').split(',')[1]; // Get base64 without data URI prefix
     setGeneratedCertificate(certificate); // Store for display on results page
+    
+    // Generate report PDF
+    const report = generateReportPDF();
+    const reportBase64 = report.output('datauristring').split(',')[1]; // Get base64 without data URI prefixpage
 
     // Save results to Supabase database with certificate
     try {
@@ -285,7 +289,8 @@ export default function App() {
           test_date: new Date().toISOString(),
           time_taken_seconds: timeSpent,
           answers: JSON.stringify(answers),
-          certificate_pdf: pdfBase64  // Save certificate as base64
+          certificate_pdf: certificateBase64,  // Save certificate as base64
+          report_pdf: reportBase64  // Save report as base64
         })
       });
       
@@ -329,7 +334,8 @@ export default function App() {
               total: results.total,
               percentage: results.percentage,
               passed: results.passed,
-              certificateBase64: pdfBase64,
+              certificateBase64: certificateBase64,
+              reportBase64: reportBase64,
               branchManagerEmail: branchManagerEmail
             })
           });
@@ -383,7 +389,7 @@ export default function App() {
     return incorrect;
   };
 
-  const downloadReport = () => {
+  const generateReportPDF = () => {
     const doc = new jsPDF();
     const incorrectAnswers = getIncorrectAnswers();
     const results = calculateResults();
@@ -393,7 +399,6 @@ export default function App() {
     doc.rect(0, 0, 210, 40, 'F');
     
     // Logo on left side
-    // Using new blue logo
     try {
       doc.addImage('/generator-source-logo-blue.jpg', 'JPEG', 15, 10, 35, 11);
     } catch (e) {
@@ -462,7 +467,7 @@ export default function App() {
         doc.setTextColor(220, 38, 38);
         doc.text('Your Answer:', 20, yPos);
         doc.setTextColor(0, 0, 0);
-        const userAnswerLines = doc.splitTextToSize(item.userAnswer, 150);
+        const userAnswerLines = doc.splitTextToSize(item.userAnswer, 140);  // Reduced from 150 to 140
         doc.text(userAnswerLines, 50, yPos);
         yPos += Math.max(5, userAnswerLines.length * 5);
         
@@ -470,7 +475,7 @@ export default function App() {
         doc.setTextColor(34, 197, 94);
         doc.text('Correct Answer:', 20, yPos);
         doc.setTextColor(0, 0, 0);
-        const correctAnswerLines = doc.splitTextToSize(item.correctAnswer, 150);
+        const correctAnswerLines = doc.splitTextToSize(item.correctAnswer, 140);  // Reduced from 150 to 140
         doc.text(correctAnswerLines, 50, yPos);
         yPos += Math.max(5, correctAnswerLines.length * 5);
         
@@ -502,6 +507,11 @@ export default function App() {
       doc.text(`Generator Source - Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
     }
     
+    return doc;
+  };
+
+  const downloadReport = () => {
+    const doc = generateReportPDF();
     doc.save(`${userData.name}_Detailed_Report.pdf`);
   };
 
