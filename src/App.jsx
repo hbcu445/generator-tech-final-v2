@@ -364,35 +364,31 @@ export default function App() {
       if (saveResponse.ok) {
         console.log('Results saved successfully to database.');
         
-        // Send email via SendGrid API directly
+        // Send email via Netlify serverless function
         try {
-          const sendgridResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
+          const emailResponse = await fetch('/.netlify/functions/send-results', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SENDGRID_API_KEY || 'SG.test'}`,
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              personalizations: [
-                {
-                  to: [{ email: userData.email, name: userData.name }],
-                  subject: `Generator Technician Test Results - ${results.passed ? 'PASSED' : 'NOT PASSED'}`
-                }
-              ],
-              from: { email: 'noreply@generatorsource.com', name: 'Generator Source' },
-              content: [
-                {
-                  type: 'text/html',
-                  value: `<h1>Test Results</h1><p>Score: ${results.percentage}% (${results.correct}/${results.total})</p><p>Status: ${results.passed ? 'PASSED' : 'NOT PASSED'}</p>`
-                }
-              ]
+              name: userData.name,
+              email: userData.email,
+              phone: userData.phone,
+              branch: userData.branch,
+              skillLevel: userData.skillLevel,
+              score: results.correct,
+              total: results.total,
+              percentage: results.percentage,
+              passed: results.passed
             })
           });
           
-          if (sendgridResponse.ok) {
-            console.log('Email sent successfully via SendGrid');
+          if (emailResponse.ok) {
+            console.log('Email sent successfully via Netlify function');
           } else {
-            console.error('Failed to send email via SendGrid:', await sendgridResponse.text());
+            const errorText = await emailResponse.text();
+            console.error('Failed to send email:', errorText);
           }
         } catch (emailErr) {
           console.error('Error sending email:', emailErr);
