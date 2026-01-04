@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@sendgrid/client':
+        specifier: ^8.1.6
+        version: 8.1.6
       '@sendgrid/mail':
         specifier: ^8.1.6
         version: 8.1.6
