@@ -25,7 +25,29 @@ export default function App() {
   const [timeTaken, setTimeTaken] = useState(0);
   const [showReport, setShowReport] = useState(false);
   const [generatedCertificate, setGeneratedCertificate] = useState(null);
+  const [scoringLevels, setScoringLevels] = useState([]);
   const timerRef = useRef(null);
+
+  // Fetch scoring levels from Supabase
+  useEffect(() => {
+    async function fetchScoringLevels() {
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/scoring_config?order=level.asc`, {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+        if (data && data.length > 0) {
+          setScoringLevels(data);
+        }
+      } catch (error) {
+        console.error('Error fetching scoring levels:', error);
+      }
+    }
+    fetchScoringLevels();
+  }, []);
 
   // Load questions from Supabase
   useEffect(() => {
@@ -119,8 +141,32 @@ export default function App() {
       }
     });
     const percentage = (correct / questions.length) * 100;
-    const passed = percentage >= 70;
-    return { correct, total: questions.length, percentage: percentage.toFixed(1), passed };
+    
+    // Determine achieved level based on scoring config
+    let achievedLevel = null;
+    let medalType = null;
+    
+    if (scoringLevels.length > 0) {
+      for (const level of scoringLevels) {
+        if (percentage >= level.min_percentage && percentage <= level.max_percentage) {
+          achievedLevel = level.level_name;
+          medalType = level.medal_type;
+          break;
+        }
+      }
+    }
+    
+    // Passed if they achieved at least Level 1 (Beginner)
+    const passed = achievedLevel !== null;
+    
+    return { 
+      correct, 
+      total: questions.length, 
+      percentage: percentage.toFixed(1), 
+      passed,
+      achievedLevel: achievedLevel || 'Not Passed',
+      medalType: medalType || null
+    };
   };
 
   const generateCertificate = (results) => {
@@ -200,15 +246,23 @@ export default function App() {
     doc.text(`${results.percentage}%`, rightX, yPos);
     doc.line(rightX, yPos + 1, rightX + 40, yPos + 1);
     
-    // Achievement Level
+    // Achievement Level (show achieved level, not selected level)
     yPos += 10;
     doc.setTextColor(51, 51, 51);
     doc.setFont('times', 'bold');
     doc.text('Achievement Level:', leftX, yPos);
     doc.setFont('times', 'normal');
     doc.setTextColor(30, 58, 95);
-    doc.text(userData.skillLevel, rightX, yPos);
-    doc.line(rightX, yPos + 1, rightX + 40, yPos + 1);
+    
+    // Add medal emoji based on medal type
+    let medalEmoji = '';
+    if (results.medalType === 'Bronze') medalEmoji = '🥉';
+    else if (results.medalType === 'Silver') medalEmoji = '🥈';
+    else if (results.medalType === 'Gold') medalEmoji = '🥇';
+    else if (results.medalType === 'Diamond') medalEmoji = '💎';
+    
+    doc.text(`${medalEmoji} ${results.achievedLevel} ${results.medalType ? '(' + results.medalType + ')' : ''}`, rightX, yPos);
+    doc.line(rightX, yPos + 1, rightX + 60, yPos + 1);
     
     // Date
     yPos += 10;
@@ -828,8 +882,19 @@ export default function App() {
                   <span className="font-semibold ml-2">{userData.branch}</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Skill Level:</span>
+                  <span className="text-gray-600">Selected Level:</span>
                   <span className="font-semibold ml-2">{userData.skillLevel}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Achieved Level:</span>
+                  <span className="font-semibold ml-2">
+                    {results.medalType === 'Bronze' && '🥉 '}
+                    {results.medalType === 'Silver' && '🥈 '}
+                    {results.medalType === 'Gold' && '🥇 '}
+                    {results.medalType === 'Diamond' && '💎 '}
+                    {results.achievedLevel}
+                    {results.medalType && ` (${results.medalType})`}
+                  </span>
                 </div>
                 <div>
                   <span className="text-gray-600">Email:</span>
