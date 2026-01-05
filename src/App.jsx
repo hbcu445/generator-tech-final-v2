@@ -169,7 +169,7 @@ export default function App() {
     };
   };
 
-  const generateCertificate = (results) => {
+  const generateCertificate = (results, timeSpent = timeTaken) => {
     const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
@@ -251,17 +251,18 @@ export default function App() {
     doc.setTextColor(51, 51, 51);
     doc.setFont('times', 'bold');
     doc.text('Achievement Level:', leftX, yPos);
-    doc.setFont('times', 'normal');
+    doc.setFont('times', 'bold');
+    doc.setFontSize(13);
     doc.setTextColor(30, 58, 95);
     
-    // Add medal emoji based on medal type
-    let medalEmoji = '';
-    if (results.medalType === 'Bronze') medalEmoji = '🥉';
-    else if (results.medalType === 'Silver') medalEmoji = '🥈';
-    else if (results.medalType === 'Gold') medalEmoji = '🥇';
-    else if (results.medalType === 'Diamond') medalEmoji = '💎';
+    // Format: "DIAMOND - Level 4" (uppercase medal type)
+    const levelNumber = scoringLevels.find(l => l.level_name === results.achievedLevel)?.level || '';
+    const achievementText = results.medalType 
+      ? `${results.medalType.toUpperCase()} - Level ${levelNumber}`
+      : results.achievedLevel;
     
-    doc.text(`${medalEmoji} ${results.achievedLevel} ${results.medalType ? '(' + results.medalType + ')' : ''}`, rightX, yPos);
+    doc.text(achievementText, rightX, yPos);
+    doc.setFontSize(11);
     doc.line(rightX, yPos + 1, rightX + 60, yPos + 1);
     
     // Date
@@ -281,7 +282,7 @@ export default function App() {
     doc.text('Time to Completion:', leftX, yPos);
     doc.setFont('times', 'normal');
     doc.setTextColor(30, 58, 95);
-    doc.text(`${formatTime(timeTaken)} out of 90 minutes`, rightX, yPos);
+    doc.text(`${formatTime(timeSpent)} out of 90 minutes`, rightX, yPos);
     doc.line(rightX, yPos + 1, rightX + 40, yPos + 1);
 
     // Signature section
@@ -314,8 +315,8 @@ export default function App() {
     const results = calculateResults();
     setStage('results');
 
-      // Generate certificate PDF
-    const certificate = generateCertificate(results);
+      // Generate certificate PDF (pass timeSpent directly)
+    const certificate = generateCertificate(results, timeSpent);
     const certificateBase64 = certificate.output('datauristring').split(',')[1]; // Get base64 without data URI prefix
     setGeneratedCertificate(certificate); // Store for display on results page
     
@@ -366,7 +367,7 @@ export default function App() {
       generatedCertificate.save(`${userData.name}_Certificate.pdf`);
     } else {
       const results = calculateResults();
-      const certificate = generateCertificate(results);
+      const certificate = generateCertificate(results, timeTaken);
       certificate.save(`${userData.name}_Certificate.pdf`);
     }
   };
@@ -492,9 +493,10 @@ export default function App() {
       });
     } else {
       yPos += 35;
-      doc.setFontSize(12);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
       doc.setTextColor(34, 197, 94);
-      doc.text('🎉 Perfect Score! All answers were correct.', 20, yPos);
+      doc.text('PERFECT SCORE! All answers were correct.', 20, yPos);
     }
     
     // Footer
