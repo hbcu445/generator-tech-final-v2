@@ -344,23 +344,18 @@ export default function App() {
     const incorrectAnswers = getIncorrectAnswers();
     const results = calculateResults();
     
-    // Header with dark blue background (matching Generator Source logo)
+    // Header with dark blue background
     doc.setFillColor(30, 58, 95); // Dark navy blue
     doc.rect(0, 0, 210, 40, 'F');
     
-    // Logo on left side
-    try {
-      doc.addImage('/generator-source-logo-blue.jpg', 'JPEG', 15, 10, 35, 11);
-    } catch (e) {
-      console.log('Logo not embedded in PDF');
-    }
-    
-    // Title text on right side
+    // Title text centered
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.text('Detailed Test Report', 105, 20, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text('Generator Technician Knowledge Test', 105, 30, { align: 'center' });
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('GENERATOR SOURCE', 105, 18, { align: 'center' });
+    doc.setFontSize(16);
+    doc.text('TECHNICIAN SKILL TEST', 105, 28, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
     
     // Test Information
     doc.setTextColor(0, 0, 0);
