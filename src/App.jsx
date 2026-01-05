@@ -323,9 +323,9 @@ export default function App() {
       if (answers[index] !== q.correct_answer_letter) {
         const userAnswerLetter = answers[index] || 'No answer';
         const userAnswerText = userAnswerLetter !== 'No answer' 
-          ? q.options.find(opt => opt.startsWith(userAnswerLetter))?.substring(3) || 'No answer'
+          ? q.options.find(opt => opt.startsWith(userAnswerLetter))?.substring(2) || 'No answer'
           : 'No answer';
-        const correctAnswerText = q.options.find(opt => opt.startsWith(q.correct_answer_letter))?.substring(3) || '';
+        const correctAnswerText = q.options.find(opt => opt.startsWith(q.correct_answer_letter))?.substring(2) || '';
         
         incorrect.push({
           questionNumber: index + 1,
