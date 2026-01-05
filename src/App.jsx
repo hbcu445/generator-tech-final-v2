@@ -412,16 +412,16 @@ export default function App() {
         doc.setTextColor(220, 38, 38);
         doc.text('Your Answer:', 20, yPos);
         doc.setTextColor(0, 0, 0);
-        const userAnswerLines = doc.splitTextToSize(item.userAnswer, 125);  // Adjusted for better wrapping
-        doc.text(userAnswerLines, 60, yPos);
+        const userAnswerLines = doc.splitTextToSize(item.userAnswer, 120);  // Adjusted for better wrapping
+        doc.text(userAnswerLines, 65, yPos);
         yPos += Math.max(5, userAnswerLines.length * 5);
         
         // Correct Answer
         doc.setTextColor(34, 197, 94);
         doc.text('Correct Answer:', 20, yPos);
         doc.setTextColor(0, 0, 0);
-        const correctAnswerLines = doc.splitTextToSize(item.correctAnswer, 125);  // Adjusted for better wrapping
-        doc.text(correctAnswerLines, 60, yPos);
+        const correctAnswerLines = doc.splitTextToSize(item.correctAnswer, 120);  // Adjusted for better wrapping
+        doc.text(correctAnswerLines, 65, yPos);
         yPos += Math.max(5, correctAnswerLines.length * 5);
         
         // Explanation
