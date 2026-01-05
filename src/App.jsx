@@ -320,8 +320,8 @@ export default function App() {
     const certificateBase64 = certificate.output('datauristring').split(',')[1]; // Get base64 without data URI prefix
     setGeneratedCertificate(certificate); // Store for display on results page
     
-    // Generate report PDF
-    const report = generateReportPDF();
+    // Generate report PDF (pass timeSpent directly)
+    const report = generateReportPDF(timeSpent);
     const reportBase64 = report.output('datauristring').split(',')[1]; // Get base64 without data URI prefixpage
 
     // Save results to Supabase database with certificate
@@ -394,7 +394,7 @@ export default function App() {
     return incorrect;
   };
 
-  const generateReportPDF = () => {
+  const generateReportPDF = (timeSpent = timeTaken) => {
     const doc = new jsPDF();
     const incorrectAnswers = getIncorrectAnswers();
     const results = calculateResults();
@@ -421,7 +421,7 @@ export default function App() {
     doc.text(`Branch: ${userData.branch}`, 20, yPos + 12);
     doc.text(`Skill Level: ${userData.skillLevel}`, 20, yPos + 18);
     doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, yPos + 24);
-    doc.text(`Time Taken: ${formatTime(timeTaken)}`, 20, yPos + 30);
+    doc.text(`Time Taken: ${formatTime(timeSpent)}`, 20, yPos + 30);
     doc.text(`Pauses: ${pauseCount}`, 20, yPos + 36);
     
     // Score Summary
@@ -512,7 +512,7 @@ export default function App() {
   };
 
   const downloadReport = () => {
-    const doc = generateReportPDF();
+    const doc = generateReportPDF(timeTaken);
     doc.save(`${userData.name}_Detailed_Report.pdf`);
   };
 
@@ -970,7 +970,7 @@ export default function App() {
               <h3 className="text-2xl font-bold text-gray-800 mb-6">Detailed Answer Report</h3>
               {getIncorrectAnswers().length === 0 ? (
                 <div className="bg-green-50 p-6 rounded-xl text-center">
-                  <div className="text-green-600 text-xl font-bold mb-2">🎉 Perfect Score!</div>
+                  <div className="text-green-600 text-xl font-bold mb-2">✓ PERFECT SCORE!</div>
                   <p className="text-gray-600">You answered all questions correctly. Excellent work!</p>
                 </div>
               ) : (
