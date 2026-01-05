@@ -9,14 +9,6 @@
   },
   "packageManager": "pnpm@10.26.2",
   "dependencies": {
-    "@sendgrid/client": "^8.1.6",
-    "@sendgrid/eventwebhook": "^8.0.0",
-    "@sendgrid/helpers": "^8.0.0",
-    "@sendgrid/mail": "^8.1.6",
-    "axios": "^1.13.2",
-    "deepmerge": "^4.3.1",
-    "follow-redirects": "^1.15.11",
-    "form-data": "^4.0.5",
     "jspdf": "^3.0.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"

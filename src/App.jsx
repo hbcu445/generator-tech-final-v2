@@ -299,59 +299,6 @@ export default function App() {
       
       if (saveResponse.ok) {
         console.log('✅ Results saved to database');
-        
-        // Look up branch manager email from admin_users table
-        let branchManagerEmail = null;
-        try {
-          const adminResponse = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?location=eq.${encodeURIComponent(userData.branch)}`, {
-            headers: {
-              'apikey': SUPABASE_KEY,
-              'Content-Type': 'application/json'
-            }
-          });
-          const admins = await adminResponse.json();
-          if (admins && admins.length > 0) {
-            branchManagerEmail = admins[0].email;
-            console.log(`✅ Found branch manager: ${branchManagerEmail}`);
-          } else {
-            console.log('⚠️ No branch manager found for this location');
-          }
-        } catch (err) {
-          console.error('Error looking up branch manager:', err);
-        }
-        
-        // Send emails via Netlify function
-        try {
-          const emailResponse = await fetch('/.netlify/functions/send-results-email', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              applicantName: userData.name,
-              applicantEmail: userData.email,
-              phone: userData.phone,
-              branch: userData.branch,
-              skillLevel: userData.skillLevel,
-              score: results.correct,
-              total: results.total,
-              percentage: results.percentage,
-              passed: results.passed,
-              certificateBase64: certificateBase64,
-              reportBase64: reportBase64,
-              branchManagerEmail: branchManagerEmail
-            })
-          });
-          
-          if (emailResponse.ok) {
-            const emailResult = await emailResponse.json();
-            console.log(`✅ Emails sent successfully to ${emailResult.recipients} recipient(s)`);
-          } else {
-            console.error('❌ Failed to send emails');
-          }
-        } catch (err) {
-          console.error('❌ Error sending emails:', err);
-        }
       } else {
         console.error('❌ Failed to save results to database');
       }
