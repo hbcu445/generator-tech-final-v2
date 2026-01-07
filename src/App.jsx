@@ -387,7 +387,7 @@ export default function App() {
           question: q.question,
           userAnswer: `${userAnswerLetter}) ${userAnswerText}`,
           correctAnswer: `${q.correct_answer_letter}) ${correctAnswerText}`,
-          explanation: getExplanationByNumber(index + 1)
+          explanation: getExplanationByNumber(q.number)
         });
       }
     });
